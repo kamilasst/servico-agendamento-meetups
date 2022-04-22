@@ -51,7 +51,7 @@ public class RegistrationServiceTest {
         //Registration registration2 = createValidRegistration(2, "Adler", LocalDate.now(), "002");
 
         // Mocks
-        Mockito.when(registrationRepository.existsByRegistration(Mockito.anyString())).thenReturn(false);
+        Mockito.when(registrationRepository.existsByCode(Mockito.anyString())).thenReturn(false);
 
         Registration registrationReturn = createValidRegistrationDefault();
         Mockito.when(registrationRepository.save(registration)).thenReturn(registrationReturn);
@@ -67,7 +67,7 @@ public class RegistrationServiceTest {
 
         assertThat(savedRegistration.getName()).isEqualTo("Kamila Santos");
         assertThat(savedRegistration.getDateOfRegistration()).isEqualTo("01/04/2022");
-        assertThat(savedRegistration.getRegistration()).isEqualTo("001");
+        assertThat(savedRegistration.getCode()).isEqualTo("001");
 
     }
 
@@ -77,7 +77,7 @@ public class RegistrationServiceTest {
 
         //cenario
         Registration registration = createValidRegistrationDefault();
-        Mockito.when(registrationRepository.existsByRegistration(Mockito.any())).thenReturn(true); //Mockito.any() - qualquer dado que ele encontre que esteja duplicado ali dentro
+        Mockito.when(registrationRepository.existsByCode(Mockito.any())).thenReturn(true); //Mockito.any() - qualquer dado que ele encontre que esteja duplicado ali dentro
 
         //execução
         //Chamando uma Throwable pq é o que quero que retorne
@@ -113,7 +113,7 @@ public class RegistrationServiceTest {
         assertThat(foundRegistration.get().getId()).isEqualTo(id);//get() = Se um valor estiver presente neste Optional, retorna o valor, caso contrário lança NoSuchElementException.
         assertThat(foundRegistration.get().getName()).isEqualTo(registration.getName());
         assertThat(foundRegistration.get().getDateOfRegistration()).isEqualTo(registration.getDateOfRegistration());
-        assertThat(foundRegistration.get().getRegistration()).isEqualTo(registration.getRegistration());
+        assertThat(foundRegistration.get().getCode()).isEqualTo(registration.getCode());
     }
 
     @Test
@@ -162,7 +162,7 @@ public class RegistrationServiceTest {
         assertThat(registration.getId()).isEqualTo(updatedRegistration.getId());
         assertThat(registration.getName()).isEqualTo(updatedRegistration.getName());
         assertThat(registration.getDateOfRegistration()).isEqualTo(updatedRegistration.getDateOfRegistration());
-        assertThat(registration.getRegistration()).isEqualTo(updatedRegistration.getRegistration());
+        assertThat(registration.getCode()).isEqualTo(updatedRegistration.getCode());
     }
 
     @Test
@@ -198,18 +198,18 @@ public class RegistrationServiceTest {
         //cenario
         String registrationAttribute = "1234";
 
-        Mockito.when(registrationRepository.findByRegistration(registrationAttribute))
-                .thenReturn(Optional.of(Registration.builder().id(11).registration(registrationAttribute).build()));
+        Mockito.when(registrationRepository.findByCode(registrationAttribute))
+                .thenReturn(Optional.of(Registration.builder().id(11).code(registrationAttribute).build()));
 
         //Execucao
-        Optional<Registration> registration = registrationService.getRegistrationByRegistrationAttribute(registrationAttribute);
+        Optional<Registration> registration = registrationService.getRegistrationByCode(registrationAttribute);
 
         //assert
         assertThat(registration.isPresent()).isTrue();
         assertThat(registration.get().getId()).isEqualTo(11);
-        assertThat(registration.get().getRegistration()).isEqualTo(registrationAttribute);
+        assertThat(registration.get().getCode()).isEqualTo(registrationAttribute);
 
-        Mockito.verify(registrationRepository, Mockito.times(1)).findByRegistration(registrationAttribute); //Mockito.times(1) - verifico se o meu repository está sendo invocado pelo ao menos uma vez e quero que ele implemente o findByRegistration
+        Mockito.verify(registrationRepository, Mockito.times(1)).findByCode(registrationAttribute); //Mockito.times(1) - verifico se o meu repository está sendo invocado pelo ao menos uma vez e quero que ele implemente o findByRegistration
     }
 
     //Utilizando o padrão builder eu mock os objetos
@@ -222,7 +222,7 @@ public class RegistrationServiceTest {
                 .id(id)
                 .name(name)
                 .dateOfRegistration("01/04/2022")
-                .registration(registration)
+                .code(registration)
                 .build();
     }
 }

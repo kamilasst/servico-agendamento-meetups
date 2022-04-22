@@ -34,7 +34,7 @@ public class RegistrationRepositoryTest {
         Registration registration_attribute = createNewRegistration(registration);
         entityManager.persist(registration_attribute);
 
-        boolean exists = registrationRepository.existsByRegistration(registration);
+        boolean exists = registrationRepository.existsByCode(registration);
 
         assertThat(exists).isTrue();
     }
@@ -45,7 +45,7 @@ public class RegistrationRepositoryTest {
 
         String registration = "123";
 
-        boolean exists = registrationRepository.existsByRegistration(registration);
+        boolean exists = registrationRepository.existsByCode(registration);
 
         assertThat(exists).isFalse();
 
@@ -98,6 +98,6 @@ public class RegistrationRepositoryTest {
         return Registration.builder()
                 .name("kamila Santos")
                 .dateOfRegistration("10/10/2021")
-                .registration(registration).build();
+                .code(registration).build();
     }
 }

@@ -1,7 +1,7 @@
-package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller;
+package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.resource;
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.RegistrationDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.RegistrationService;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;

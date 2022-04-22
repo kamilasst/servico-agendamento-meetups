@@ -2,7 +2,6 @@ package com.womakerscode.microservicemeetup.servico.agendamento.meetups.service;
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
@@ -19,5 +18,5 @@ public interface RegistrationService {
 
     Page<Registration> find(Registration filter, Pageable pageRequest);
 
-    Optional<Registration> getRegistrationByRegistrationAttribute(String registrationAttribute);
+    Optional<Registration> getRegistrationByCode(String code);
 }

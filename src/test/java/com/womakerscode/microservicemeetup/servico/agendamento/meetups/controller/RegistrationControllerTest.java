@@ -1,9 +1,10 @@
 package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.resource.RegistrationController;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.RegistrationDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.RegistrationService;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
@@ -54,7 +55,7 @@ public class RegistrationControllerTest {
         //cenario
         RegistrationDTO registrationDTOBuilder = createNewRegistration();
         Registration savedRegistration = Registration.builder().id(101)
-                .name("Kamila Santos").dateOfRegistration("10/10/2021").registration("001").build();
+                .name("Kamila Santos").dateOfRegistration("10/10/2021").code("001").build();
 
         //execucao
         BDDMockito.given(registrationService.save(any(Registration.class))).willReturn(savedRegistration);// BDDMockito simula a camada do usuário
@@ -74,7 +75,7 @@ public class RegistrationControllerTest {
                 .andExpect(jsonPath("id").value(101))
                 .andExpect(jsonPath("name").value(registrationDTOBuilder.getName()))
                 .andExpect(jsonPath("dateOfRegistration").value(registrationDTOBuilder.getDateOfRegistration()))
-                .andExpect(jsonPath("registration").value(registrationDTOBuilder.getRegistration()));
+                .andExpect(jsonPath("registration").value(registrationDTOBuilder.getCode()));
     }
 
     @Test
@@ -124,7 +125,7 @@ public class RegistrationControllerTest {
                 .id(id)
                 .name(createNewRegistration().getName())
                 .dateOfRegistration(createNewRegistration().getDateOfRegistration())
-                .registration(createNewRegistration().getRegistration()).build();
+                .code(createNewRegistration().getCode()).build();
 
         BDDMockito.given(registrationService.getRegistrationById(id)).willReturn(Optional.of(registration));
 
@@ -137,7 +138,7 @@ public class RegistrationControllerTest {
                 .andExpect(jsonPath("id").value(id))
                 .andExpect(jsonPath("name").value(createNewRegistration().getName()))
                 .andExpect(jsonPath("dateOfRegistration").value(createNewRegistration().getDateOfRegistration()))
-                .andExpect(jsonPath("registration").value(createNewRegistration().getRegistration()));
+                .andExpect(jsonPath("registration").value(createNewRegistration().getCode()));
     }
 
     @Test
@@ -197,7 +198,7 @@ public class RegistrationControllerTest {
                         .id(id)
                         .name("Julie Neri")
                         .dateOfRegistration("10/10/2021")
-                        .registration("323")
+                        .code("323")
                         .build();
 
         BDDMockito.given(registrationService.getRegistrationById(anyInt()))
@@ -208,7 +209,7 @@ public class RegistrationControllerTest {
                         .id(id)
                         .name("Kamila Santos")
                         .dateOfRegistration("10/10/2021")
-                        .registration("323")
+                        .code("323")
                         .build();
 
         BDDMockito.given(registrationService
@@ -257,14 +258,14 @@ public class RegistrationControllerTest {
                 .id(id)
                 .name(createNewRegistration().getName())
                 .dateOfRegistration(createNewRegistration().getDateOfRegistration())
-                .registration(createNewRegistration().getRegistration()).build();
+                .code(createNewRegistration().getCode()).build();
 
         BDDMockito.given(registrationService.find(Mockito.any(Registration.class), Mockito.any(Pageable.class)) )
                 .willReturn(new PageImpl<>(Arrays.asList(registration), PageRequest.of(0,100), 1));
 
         // ? = Estou passando um parametro/ % = o dado que vai estar vindo/ s = qualquer coisa que vier depois disso / & = separar os parametros
         String queryString = String.format("?name=%s&dateOfRegistration=%s&page=0&size=100",
-                registration.getRegistration(), registration.getDateOfRegistration());
+                registration.getCode(), registration.getDateOfRegistration());
 
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
@@ -283,7 +284,7 @@ public class RegistrationControllerTest {
 
     private RegistrationDTO createNewRegistration() {
         return RegistrationDTO.builder().id(101)
-                .name("Kamila Santos").dateOfRegistration("10/10/2021").registration("001").build();
+                .name("Kamila Santos").dateOfRegistration("10/10/2021").code("001").build();
     }
 
 }

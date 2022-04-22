@@ -12,11 +12,10 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "tb_registration")
 public class Registration {
 
     @Id //indica que é um id
-    @Column(name = "registration_id")
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY) //gera o id automaticamente
     private Integer id;
 
@@ -27,5 +26,10 @@ public class Registration {
     private String dateOfRegistration;
 
     @Column
-    private String registration;
+    private String code;
+
+    @JoinColumn(name = "id_meetup")
+    @ManyToOne
+    private Meetup meetup;
+
 }

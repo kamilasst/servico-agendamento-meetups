@@ -1,4 +1,4 @@
-package com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity;
+package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +22,6 @@ public class RegistrationDTO {
     private String dateOfRegistration;
 
     @NotEmpty
-    private String registration;
+    private String code;
 
 }
