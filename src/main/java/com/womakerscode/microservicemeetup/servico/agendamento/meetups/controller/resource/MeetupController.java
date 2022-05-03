@@ -1,24 +1,24 @@
 package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.resource;
 
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.ApplicationControllerAdvice;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupFilterDTO;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupRegistrationDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.MeetupService;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.RegistrationService;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
+import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/meetups")
@@ -26,53 +26,101 @@ import java.util.stream.Collectors;
 public class MeetupController {
 
     private final MeetupService meetupService;
-//    private final RegistrationService registrationService;
-    private final ModelMapper modelMapper;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    private Integer create(@RequestBody MeetupDTO meetupDTO) {
+    @PostMapping("/create")
+    private ResponseEntity<Integer> create(@RequestBody MeetupDTO meetupDTO) {
 
-        //TODO ksst - apagar comentários
-//        Registration registration = registrationService.getRegistrationByRegistrationAttribute(meetupDTO.getRegistrationAttribute())
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
-        Meetup entity = Meetup.builder()
-//                .registration(registration)
-                .event(meetupDTO.getEvent())
-                .meetupDate("10/10/2021")
-                .build();
+        try {
+            Integer meetupId = meetupService.save(meetupDTO.getEvent());
 
-        entity = meetupService.save(entity);
-        return entity.getId();
-    }
+            return ResponseEntity.created(URI.create("/meetups/" + meetupId)).build();
 
+        } catch (BusinessException e) {
+            return ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
 
-    @GetMapping
-    public Page<MeetupDTO> find(MeetupFilterDTO dto, Pageable pageRequest) {
-
-        Page<Meetup> pageMeetups = meetupService.find(dto, pageRequest);
-//        List<MeetupDTO> meetups = pageMeetups
-//                .getContent()
-//                .stream()
-//                .map(meetup -> {
-//
-////                    Registration registration = meetup.getRegistration();
-////                    RegistrationDTO registrationDTO = modelMapper.map(registration, RegistrationDTO.class);
-//
-//                    MeetupDTO meetupDTO = modelMapper.map(meetup, MeetupDTO.class);
-//                  //  meetupDTO.setRegistration(registrationDTO);
-//                    return meetupDTO;
-//                }).collect(Collectors.toList());
-
-        List<MeetupDTO> meetupsArrayList = new ArrayList<>();
-        for (Meetup meetup : pageMeetups.getContent()){
-            MeetupDTO meetupDTO = modelMapper.map(meetup, MeetupDTO.class);
-            meetupsArrayList.add(meetupDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
 
+    @GetMapping("/findById/{id}")
+    private ResponseEntity<Meetup> findById(@PathVariable Integer id) {
 
-        return new PageImpl<MeetupDTO>(meetupsArrayList, pageRequest, pageMeetups.getTotalElements());
+        try {
+            Optional<Meetup> meetupOptional = meetupService.findById(id);
+
+            if (meetupOptional.isPresent()) {
+                return ResponseEntity.ok(meetupOptional.get());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } catch (BusinessException e) {
+            return ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/update")
+    private ResponseEntity<Meetup> update(@RequestBody MeetupDTO meetupDTO) {
+
+        try {
+            Meetup meetupUpdated = meetupService.update(meetupDTO);
+
+            return ResponseEntity.ok(meetupUpdated);
+
+        } catch (BusinessException e) {
+            return ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/deleteById/{id}")
+    private ResponseEntity deleteById(@PathVariable Integer id) {
+
+        try {
+            meetupService.delete(id);
+            return ResponseEntity.noContent().build();
+
+        } catch (BusinessException e) {
+            return ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/findAll")
+    public Page<Meetup> findAll(Pageable pageRequest) {
+
+        try {
+
+            Page<Meetup> meetupDb = meetupService.findAll(pageRequest);
+
+            List<Meetup> meetupList = meetupDb.getContent();
+
+            return new PageImpl<>(meetupList, pageRequest, meetupDb.getTotalElements());
+
+        } catch (BusinessException e) {
+            return (Page<Meetup>) ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
+
+        } catch (Exception e) {
+            return (Page<Meetup>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 
+    // TODO ksst
+    // 2) try catch
+    // 3) validacao event null
+    @GetMapping("/findAllRegistrationOnMeetup")
+    public List<MeetupRegistrationDTO> findAllRegistrationOnMeetup(@RequestBody MeetupFilterDTO dto) {
+
+        List<MeetupRegistrationDTO> meetupRegistrationsDto = meetupService.findAllRegistrationOnMeetup(dto);
+
+        return meetupRegistrationsDto;
+    }
 }

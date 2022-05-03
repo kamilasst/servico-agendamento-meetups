@@ -30,9 +30,8 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(SpringExtension.class)  //SprinExtention - p/ o compilador entender que é uma camada de teste
 @ActiveProfiles("test") //Ativa a profile de teste da nossa classe Test
@@ -119,23 +118,23 @@ public class RegistrationControllerTest {
     @Test
     @DisplayName("Should get registration information")
     public void getRegistrationTest() throws Exception{
-        Integer id = 11;
+        String code = "002";
 
         Registration registration = Registration.builder()
-                .id(id)
+                .code(code)
                 .name(createNewRegistration().getName())
                 .dateOfRegistration(createNewRegistration().getDateOfRegistration())
                 .code(createNewRegistration().getCode()).build();
 
-        BDDMockito.given(registrationService.getRegistrationById(id)).willReturn(Optional.of(registration));
+        BDDMockito.given(registrationService.findByCode(code)).willReturn(Optional.of(registration));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get(REGISTRATION_API.concat("/" + id))
+                .get(REGISTRATION_API.concat("/" + code))
                 .accept(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(requestBuilder)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("id").value(id))
+                .andExpect(jsonPath("code").value(code))
                 .andExpect(jsonPath("name").value(createNewRegistration().getName()))
                 .andExpect(jsonPath("dateOfRegistration").value(createNewRegistration().getDateOfRegistration()))
                 .andExpect(jsonPath("registration").value(createNewRegistration().getCode()));
@@ -145,7 +144,7 @@ public class RegistrationControllerTest {
     @DisplayName("Should return NOT FOUND when the registration doesn't exists")
     public void registrationNotFoundTest() throws Exception{
 
-        BDDMockito.given(registrationService.getRegistrationById(anyInt())).willReturn(Optional.empty());
+        BDDMockito.given(registrationService.findByCode(anyString())).willReturn(Optional.empty());
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
                 .get(REGISTRATION_API.concat("/" + 1))
@@ -159,7 +158,7 @@ public class RegistrationControllerTest {
     @DisplayName("Should delete the registration")
     public void deleteRegistration() throws Exception {
 
-        BDDMockito.given(registrationService.getRegistrationById(anyInt()))
+        BDDMockito.given(registrationService.findByCode(anyString()))
                 .willReturn(Optional.of(Registration.builder().id(11).build()));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
@@ -175,7 +174,7 @@ public class RegistrationControllerTest {
     public void deleteNonExistentRegistrationTest() throws Exception {
 
         BDDMockito.given(registrationService
-                .getRegistrationById(anyInt())).willReturn(Optional.empty());
+                .findByCode(anyString())).willReturn(Optional.empty());
 
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
@@ -201,7 +200,7 @@ public class RegistrationControllerTest {
                         .code("323")
                         .build();
 
-        BDDMockito.given(registrationService.getRegistrationById(anyInt()))
+        BDDMockito.given(registrationService.findByCode(anyString()))
                 .willReturn(Optional.of(updatingRegistration));
 
         Registration updatedRegistration =
@@ -235,7 +234,7 @@ public class RegistrationControllerTest {
     public void updateNonExistentRegistrationTest() throws Exception {
 
         String json = new ObjectMapper().writeValueAsString(createNewRegistration());
-        BDDMockito.given(registrationService.getRegistrationById(anyInt()))
+        BDDMockito.given(registrationService.findByCode(anyString()))
                 .willReturn(Optional.empty());
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
@@ -260,7 +259,7 @@ public class RegistrationControllerTest {
                 .dateOfRegistration(createNewRegistration().getDateOfRegistration())
                 .code(createNewRegistration().getCode()).build();
 
-        BDDMockito.given(registrationService.find(Mockito.any(Registration.class), Mockito.any(Pageable.class)) )
+        BDDMockito.given(registrationService.findAll(Mockito.any(Pageable.class)) )
                 .willReturn(new PageImpl<>(Arrays.asList(registration), PageRequest.of(0,100), 1));
 
         // ? = Estou passando um parametro/ % = o dado que vai estar vindo/ s = qualquer coisa que vier depois disso / & = separar os parametros

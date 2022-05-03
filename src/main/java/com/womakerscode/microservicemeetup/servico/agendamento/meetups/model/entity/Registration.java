@@ -1,22 +1,20 @@
 package com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 @Builder
 @Entity
 public class Registration {
 
-    @Id //indica que é um id
+    @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //gera o id automaticamente
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(name = "person_name")

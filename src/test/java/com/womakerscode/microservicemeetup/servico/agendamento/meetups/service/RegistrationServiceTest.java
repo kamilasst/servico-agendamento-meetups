@@ -3,14 +3,13 @@ package com.womakerscode.microservicemeetup.servico.agendamento.meetups.service;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.repository.RegistrationRepository;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.impl.RegistrationServiceImpl;
 
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -33,13 +32,17 @@ public class RegistrationServiceTest {
 
     RegistrationService registrationService;
 
+    @Autowired
+    MeetupService meetupService;
+
     @MockBean
     RegistrationRepository registrationRepository;
 
-    @BeforeEach //antes de cada teste roda esse método
-    public void setUp(){
-        this.registrationService = new RegistrationServiceImpl(registrationRepository); //dependência do service e dar um new na mesma
-    }
+//    @BeforeEach
+//    public void setUp(){
+//
+//        this.registrationService = new RegistrationServiceImpl(registrationRepository); //dependência do service e dar um new na mesma
+//    }
 
     @Test
     @DisplayName("Should save an registration")
@@ -96,21 +99,21 @@ public class RegistrationServiceTest {
 
     @Test
     @DisplayName("Should get an registration by Id")
-    public void getByRegistrationIdTest(){
+    public void getByRegistrationCodeTest(){
 
         //cenario
-        Integer id = 11;
+        String code = "11";
         Registration registration = createValidRegistrationDefault();
-        registration.setId(id);
+        registration.setCode(code);
 
-        Mockito.when(registrationRepository.findById(id)).thenReturn(Optional.of(registration));//of -Retorna um Optional com o valor não nulo presente especificado.
+        Mockito.when(registrationRepository.findByCode(code)).thenReturn(Optional.of(registration));//of -Retorna um Optional com o valor não nulo presente especificado.
 
         //Execucao
-        Optional<Registration> foundRegistration = registrationService.getRegistrationById(id);
+        Optional<Registration> foundRegistration = registrationService.findByCode(code);
 
         //assert
         assertThat(foundRegistration.isPresent()).isTrue(); //isPresent() - Retorna true se houver um valor presente, caso contrário false
-        assertThat(foundRegistration.get().getId()).isEqualTo(id);//get() = Se um valor estiver presente neste Optional, retorna o valor, caso contrário lança NoSuchElementException.
+        assertThat(foundRegistration.get().getCode()).isEqualTo(code);//get() = Se um valor estiver presente neste Optional, retorna o valor, caso contrário lança NoSuchElementException.
         assertThat(foundRegistration.get().getName()).isEqualTo(registration.getName());
         assertThat(foundRegistration.get().getDateOfRegistration()).isEqualTo(registration.getDateOfRegistration());
         assertThat(foundRegistration.get().getCode()).isEqualTo(registration.getCode());
@@ -118,14 +121,14 @@ public class RegistrationServiceTest {
 
     @Test
     @DisplayName("Should return empty when get an registration by id when doesn't exists")
-    public void registrationNotFoundByIdTest(){
+    public void registrationNotFoundByCodeTest(){
 
         //cenario
-        Integer id = 11;
-        Mockito.when(registrationRepository.findById(id)).thenReturn(Optional.empty());
+        String code = "11";
+        Mockito.when(registrationRepository.findByCode(code)).thenReturn(Optional.empty());
 
         //Execucao
-        Optional<Registration> registration = registrationService.getRegistrationById(id);
+        Optional<Registration> registration = registrationService.findByCode(code);
 
         //Assert
         assertThat(registration.isPresent()).isFalse();
@@ -137,7 +140,7 @@ public class RegistrationServiceTest {
 
         Registration registration = Registration.builder().id(11).build();//Builder - é utilizado para buscar, trazer e construir a sua informação
 
-        assertDoesNotThrow(() -> registrationService.delete(registration));//assertDoesNotThrow - Garante que não vai estourar uma exceção quando eu fizer ele
+        assertDoesNotThrow(() -> registrationService.delete(registration.getCode()));//assertDoesNotThrow - Garante que não vai estourar uma exceção quando eu fizer ele
 
         Mockito.verify(registrationRepository, Mockito.times(1)).delete(registration);//times - indica o numero de invocações dessa classe e nesse caso seja invocado uma única vez
     }
@@ -181,7 +184,7 @@ public class RegistrationServiceTest {
         Mockito.when(registrationRepository.findAll(Mockito.any(Example.class),
                 Mockito.any(PageRequest.class))).thenReturn(page);
 
-        Page<Registration> result = registrationService.find(registration, pageRequest);
+        Page<Registration> result = registrationService.findAll(pageRequest);
 
         //assert
         assertThat(result.getTotalElements()).isEqualTo(1);
@@ -202,7 +205,7 @@ public class RegistrationServiceTest {
                 .thenReturn(Optional.of(Registration.builder().id(11).code(registrationAttribute).build()));
 
         //Execucao
-        Optional<Registration> registration = registrationService.getRegistrationByCode(registrationAttribute);
+        Optional<Registration> registration = registrationService.findByCode(registrationAttribute);
 
         //assert
         assertThat(registration.isPresent()).isTrue();
@@ -217,12 +220,12 @@ public class RegistrationServiceTest {
         return createValidRegistration(101, "Kamila Santos","01/04/2022", "001");
     }
 
-    private Registration createValidRegistration(Integer id, String name, String date, String registration) {
+    private Registration createValidRegistration(Integer id, String name, String date, String code) {
         return Registration.builder() //criando o padrão builder eu mock os meus objetos
                 .id(id)
                 .name(name)
                 .dateOfRegistration("01/04/2022")
-                .code(registration)
+                .code(code)
                 .build();
     }
 }

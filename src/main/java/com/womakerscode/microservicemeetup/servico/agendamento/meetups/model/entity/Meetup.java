@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor
@@ -19,11 +20,14 @@ public class Meetup {
     private Integer id;
 
     @Column
+    @NotNull
     private String event;
 
     @Column
-    private String meetupDate;
+    @NotNull
+    private String date;
 
     @Column
     private Boolean registered;
+
 }

@@ -24,4 +24,6 @@ public class RegistrationDTO {
     @NotEmpty
     private String code;
 
+    private String event;
+
 }

@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class MeetupDTO {
 
     private Integer id;
-
     private String event;
+
 }

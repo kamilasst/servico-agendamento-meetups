@@ -1,9 +1,12 @@
 package com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.impl;
 
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.repository.RegistrationRepository;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.RegistrationService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
@@ -12,13 +15,14 @@ import java.util.Optional;
 @Service
 public class RegistrationServiceImpl implements RegistrationService {
 
-    RegistrationRepository registrationRepository;
+    private RegistrationRepository registrationRepository;
 
-    public RegistrationServiceImpl(RegistrationRepository registrationRepository) {
-        this.registrationRepository = registrationRepository;
+    public RegistrationServiceImpl(RegistrationRepository repository) {
+        this.registrationRepository = repository;
     }
 
     public Registration save(Registration registration) {
+
         if (registrationRepository.existsByCode(registration.getCode())){
             throw new BusinessException("Registration already created");
         }
@@ -26,40 +30,132 @@ public class RegistrationServiceImpl implements RegistrationService {
         return registrationRepository.save(registration);
     }
 
-    @Override
-    public Optional<Registration> getRegistrationById(Integer id) {
-        return registrationRepository.findById(id);
+    public Integer save(RegistrationDTO registrationDTO, Optional<Meetup> meetupOptional){
+
+        if (meetupOptional.isPresent()) {
+            Registration registration = createRegistration(registrationDTO, meetupOptional.get());
+
+            Registration registrationBd = save(registration);
+
+            return registrationBd.getId();
+        }
+        return null;
     }
 
     @Override
-    public void delete(Registration registration) {
-        if (registration == null || registration.getId() == null){
-            throw new IllegalArgumentException("Registration id cannot be null");
-        }
-        this.registrationRepository.delete(registration);
+    public Optional<Registration> findByCode(String code) {
+
+        validateCode(code);
+        return registrationRepository.findByCode(code);
     }
 
     @Override
     public Registration update(Registration registration) {
-        if (registration == null || registration.getId() == null){
-            throw new IllegalArgumentException("Registration id cannot be null");
+        return registrationRepository.save(registration);
+    }
+
+    @Override
+    public Registration update(RegistrationDTO registrationDTO) {
+
+        validateRegistrationDTO(registrationDTO);
+
+        Optional<Registration> registrationBd = findByCode(registrationDTO.getCode());
+
+        validateRegistration(registrationBd);
+
+        Registration registration = registrationBd.get();
+
+        if (registrationDTO.getName() != null) {
+            registration.setName(registrationDTO.getName());
         }
-        return this.registrationRepository.save(registration);
+        if (registrationDTO.getDateOfRegistration() != null) {
+            registration.setDateOfRegistration(registrationDTO.getDateOfRegistration());
+        }
+
+        Registration registrationUpdated = update(registration);
+        return registrationUpdated;
+    }
+
+    private void validateRegistration(Optional<Registration> registrationBd) {
+        if (registrationBd.isEmpty()) {
+            throw new BusinessException("Registration code not found");
+        }
     }
 
     @Override
-    public Page<Registration> find(Registration filter, Pageable pageRequest) {
-        Example<Registration> example = Example.of(filter,
-                ExampleMatcher
-                        .matching()
-                        .withIgnoreCase()
-                        .withIgnoreNullValues()
-                        .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
-        return registrationRepository.findAll(example,pageRequest);
+    public void delete(String code) {
+
+        validateCode(code);
+
+        Optional<Registration> registrationDb = findByCode(code);
+
+        validateRegistration(registrationDb);
+
+        this.registrationRepository.delete(registrationDb.get());
     }
 
     @Override
-    public Optional<Registration> getRegistrationByCode(String code) {
-        return registrationRepository.findByCode(code);
+    public Page<Registration> findAll(Pageable pageRequest) {
+
+        Page<Registration> registration = registrationRepository.findAll(pageRequest);
+        return registration;
+    }
+
+    public Registration addMeetupInRegistration(RegistrationDTO registrationDTO, Optional<Meetup> meetupOptional){
+
+        validateMeetUp(meetupOptional);
+
+        Optional<Registration> registrationOptional = findByCode(registrationDTO.getCode());
+
+        validateRegistration(registrationOptional);
+
+        Registration registration = registrationOptional.get();
+        registration.setMeetup(meetupOptional.get());
+
+        Registration registrationUpdated = update(registration);
+
+        return registrationUpdated;
+    }
+
+    private void validateMeetUp(Optional<Meetup> meetupOptional) {
+
+        if(meetupOptional.isEmpty()) {
+            throw new BusinessException("Meetup not found");
+        }
+    }
+
+    @Override
+    public boolean existMeetupOnRegistration(Integer id){
+
+        Integer count = registrationRepository.getCountRegistrationAssociatedMeetup(id);
+
+        if (count > 0){
+            return true;
+        }
+        return false;
+    }
+
+    private void validateCode(String code) {
+
+        if(StringUtils.isBlank(code)){
+            throw new BusinessException("Invalid code");
+        }
+    }
+
+    private void validateRegistrationDTO(RegistrationDTO registrationDTO) {
+
+        if (registrationDTO == null || StringUtils.isBlank(registrationDTO.getCode())) {
+            throw new BusinessException("Registration code cannot be null");
+        }
+    }
+
+    private Registration createRegistration(RegistrationDTO registrationDTO, Meetup meetup){
+
+        return Registration.builder()
+                .name(registrationDTO.getName())
+                .dateOfRegistration(registrationDTO.getDateOfRegistration())
+                .code(registrationDTO.getCode())
+                .meetup(meetup)
+                .build();
     }
 }
