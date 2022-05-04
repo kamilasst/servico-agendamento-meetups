@@ -21,25 +21,15 @@ public class RegistrationServiceImpl implements RegistrationService {
         this.registrationRepository = repository;
     }
 
-    public Registration save(Registration registration) {
+    public Integer save(RegistrationDTO registrationDTO, Optional<Meetup> meetupOptional) {
 
-        if (registrationRepository.existsByCode(registration.getCode())){
-            throw new BusinessException("Registration already created");
-        }
+        Meetup meetup = meetupOptional.isPresent() ? meetupOptional.get() : null;
 
-        return registrationRepository.save(registration);
-    }
+        Registration registration = createRegistration(registrationDTO, meetup);
 
-    public Integer save(RegistrationDTO registrationDTO, Optional<Meetup> meetupOptional){
+        Registration registrationBd = save(registration);
 
-        if (meetupOptional.isPresent()) {
-            Registration registration = createRegistration(registrationDTO, meetupOptional.get());
-
-            Registration registrationBd = save(registration);
-
-            return registrationBd.getId();
-        }
-        return null;
+        return registrationBd.getId();
     }
 
     @Override
@@ -47,11 +37,6 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         validateCode(code);
         return registrationRepository.findByCode(code);
-    }
-
-    @Override
-    public Registration update(Registration registration) {
-        return registrationRepository.save(registration);
     }
 
     @Override
@@ -76,12 +61,6 @@ public class RegistrationServiceImpl implements RegistrationService {
         return registrationUpdated;
     }
 
-    private void validateRegistration(Optional<Registration> registrationBd) {
-        if (registrationBd.isEmpty()) {
-            throw new BusinessException("Registration code not found");
-        }
-    }
-
     @Override
     public void delete(String code) {
 
@@ -98,6 +77,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     public Page<Registration> findAll(Pageable pageRequest) {
 
         Page<Registration> registration = registrationRepository.findAll(pageRequest);
+
         return registration;
     }
 
@@ -117,22 +97,38 @@ public class RegistrationServiceImpl implements RegistrationService {
         return registrationUpdated;
     }
 
-    private void validateMeetUp(Optional<Meetup> meetupOptional) {
-
-        if(meetupOptional.isEmpty()) {
-            throw new BusinessException("Meetup not found");
-        }
-    }
-
     @Override
     public boolean existMeetupOnRegistration(Integer id){
 
         Integer count = registrationRepository.getCountRegistrationAssociatedMeetup(id);
 
-        if (count > 0){
-            return true;
+        return count > 0;
+    }
+
+    private Registration save(Registration registration) {
+
+        if (registrationRepository.existsByCode(registration.getCode())){
+            throw new BusinessException("Registration already created");
         }
-        return false;
+
+        return registrationRepository.save(registration);
+    }
+
+    private Registration update(Registration registration) {
+        return registrationRepository.save(registration);
+    }
+
+    private void validateRegistration(Optional<Registration> registrationBd) {
+        if (registrationBd.isEmpty()) {
+            throw new BusinessException("Registration code not found");
+        }
+    }
+
+    private void validateMeetUp(Optional<Meetup> meetupOptional) {
+
+        if(meetupOptional.isEmpty()) {
+            throw new BusinessException("Meetup not found");
+        }
     }
 
     private void validateCode(String code) {

@@ -10,17 +10,13 @@ import java.util.Optional;
 
 public interface RegistrationService {
 
-    Registration save(Registration registration);
-
     Integer save(RegistrationDTO registrationDTO, Optional<Meetup> meetupOptional);
-
-    Optional<Registration> findByCode(String code);
 
     void delete(String code);
 
-    Registration update(Registration registration);
-
     Registration update(RegistrationDTO registrationDTO);
+
+    Optional<Registration> findByCode(String code);
 
     Page<Registration> findAll(Pageable pageRequest);
 
