@@ -1,8 +1,6 @@
 package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupFilterDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.resource.RegistrationController;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
@@ -10,12 +8,12 @@ import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.repository.RegistrationRepository;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.MeetupService;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.RegistrationService;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.util.MeetupBuilder;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.util.RegistrationBuilder;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.BDDMockito;
@@ -36,8 +34,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.*;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
@@ -62,9 +58,10 @@ public class RegistrationControllerTest {
     public void createRegistrationWithMeetup() throws Exception{
 
         // arrange
-        Optional<Meetup> meetupOptional = createMeetupOptional("Java");
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithMeetup("123", meetupOptional.get().getEvent());
-        Registration registrationSaved = createNewRegistrationWithMeetup("123", meetupOptional.get());
+        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup("123", meetupOptional.get().getEvent());
+        Registration registrationSaved = RegistrationBuilder.createNewRegistrationWithMeetup("123", meetupOptional.get());
+        registrationSaved.setId(1);
 
         String json = new ObjectMapper().writeValueAsString(registrationDTO);
 
@@ -85,8 +82,8 @@ public class RegistrationControllerTest {
     public void createRegistrationWithoutMeetup() throws Exception{
 
         // arrange
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("123");
-        Registration registrationSaved = createNewRegistrationWithoutMeetup("123");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup("123");
+        Registration registrationSaved = RegistrationBuilder.createNewRegistrationWithoutMeetup("123");
 
         String json = new ObjectMapper().writeValueAsString(registrationDTO);
 
@@ -107,8 +104,8 @@ public class RegistrationControllerTest {
     public void createRegistrationErrorTest() throws Exception{
 
         // arrange
-        Optional<Meetup> meetupOptional = createMeetupOptional("Java");
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithMeetup("123", meetupOptional.get().getEvent());
+        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup("123", meetupOptional.get().getEvent());
 
         String json = new ObjectMapper().writeValueAsString(registrationDTO);
 
@@ -129,8 +126,8 @@ public class RegistrationControllerTest {
     public void createNotRegistrationWithDuplicatedRegistration() throws Exception{
 
         // arrange
-        Optional<Meetup> meetupOptional = createMeetupOptional("Java");
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithMeetup("123", meetupOptional.get().getEvent());
+        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup("123", meetupOptional.get().getEvent());
 
         BDDMockito.given(meetupService.findByEvent(Mockito.any(MeetupFilterDTO.class))).willReturn(meetupOptional);
         BDDMockito.given(registrationService.save(Mockito.any(RegistrationDTO.class), Mockito.any(Optional.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_02));
@@ -150,8 +147,8 @@ public class RegistrationControllerTest {
     @DisplayName("Should update a registration success")
     public void updateRegistrationSuccess() throws Exception {
 
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("123");
-        Registration registration = createNewRegistrationWithoutMeetup("123");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup("123");
+        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup("123");
         registration.setName("Maria");
         registration.setDateOfRegistration("21/04/22");
 
@@ -175,7 +172,7 @@ public class RegistrationControllerTest {
     @DisplayName("Should return error when try to update registration not found.")
     public void updateRegistrationErrorRegistrationNotFound() throws Exception {
 
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("123");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup("123");
 
         BDDMockito.given(registrationService.update(Mockito.any(RegistrationDTO.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_04));
 
@@ -190,14 +187,13 @@ public class RegistrationControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-
     @Test
     @DisplayName("Should return error when try to update registration code is null.")
     public void updateRegistrationErrorRegistrationCodeIsNull() throws Exception {
 
         BDDMockito.given(registrationService.update(Mockito.any(RegistrationDTO.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_05));
 
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup(null);
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup(null);
         String json = new ObjectMapper().writeValueAsString(registrationDTO);
 
         MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put(REGISTRATION_API.concat("/update"))
@@ -213,7 +209,7 @@ public class RegistrationControllerTest {
     @DisplayName("Should not update a registration with registration code empty")
     public void updateRegistrationErrorRegistrationCodeEmpty() throws Exception {
 
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup("");
 
         BDDMockito.given(registrationService.update(Mockito.any(RegistrationDTO.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_04));
 
@@ -234,7 +230,7 @@ public class RegistrationControllerTest {
 
         String code = "123";
 
-        Registration registration = createNewRegistrationWithoutMeetup(code);
+        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(code);
 
         BDDMockito.given(registrationService.findByCode(code)).willReturn(Optional.of(registration));
 
@@ -254,8 +250,8 @@ public class RegistrationControllerTest {
     public void findByCodeRegistrationWithMeetupSuccess() throws Exception {
 
         String code = "123";
-        Meetup meetup = createMeetup("Java");
-        Registration registration = createNewRegistrationWithMeetup(code,meetup);
+        Meetup meetup = MeetupBuilder.create("Java");
+        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(code,meetup);
 
         BDDMockito.given(registrationService.findByCode(code)).willReturn(Optional.of(registration));
 
@@ -355,9 +351,9 @@ public class RegistrationControllerTest {
     public void addMeetupInRegistrationSuccess() throws Exception {
 
         String event = "Java";
-        Optional<Meetup> meetupOptional = createMeetupOptional(event);
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("123");
-        Registration registration = createNewRegistrationWithMeetup(registrationDTO.getCode(), meetupOptional.get());
+        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional(event);
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup("123");
+        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(registrationDTO.getCode(), meetupOptional.get());
 
         BDDMockito.given(meetupService.findByEvent(Mockito.any(MeetupFilterDTO.class))).willReturn(meetupOptional);
         BDDMockito.given(registrationService.addMeetupInRegistration(Mockito.any(RegistrationDTO.class), Mockito.any(Optional.class))).willReturn(registration);
@@ -381,12 +377,11 @@ public class RegistrationControllerTest {
     public void notAddMeetupInRegistrationWhenMeetupAlreadyExistINRegistration() throws Exception {
 
         String event = "Java";
-        Optional<Meetup> meetupOptional = createMeetupOptional(event);
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("123");
-        Registration registration = createNewRegistrationWithMeetup(registrationDTO.getCode(), meetupOptional.get());
+        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional(event);
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup("123");
 
         BDDMockito.given(meetupService.findByEvent(Mockito.any(MeetupFilterDTO.class))).willReturn(meetupOptional);
-        BDDMockito.given(registrationService.addMeetupInRegistration(Mockito.any(RegistrationDTO.class), Mockito.any(Optional.class))).willReturn(registration);
+        BDDMockito.given(registrationService.addMeetupInRegistration(Mockito.any(RegistrationDTO.class), Mockito.any(Optional.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_06));
 
         String jsonRequest = new ObjectMapper().writeValueAsString(registrationDTO);
 
@@ -395,11 +390,8 @@ public class RegistrationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
-        String json = new ObjectMapper().writeValueAsString(registration);
-
         mockMvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(content().string(json));
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -490,72 +482,5 @@ public class RegistrationControllerTest {
         mockMvc.perform(requestBuilder)
                 .andExpect(status().isOk())
                 .andExpect(content().string(jsonResponse));
-    }
-
-    private RegistrationDTO createNewRegistration() {
-        return RegistrationDTO.builder().id(101)
-                .name("Kamila Santos").dateOfRegistration("10/10/2021").code("001").build();
-    }
-
-    public static RegistrationDTO createNewRegistrationDTOWithMeetup(String code, String event) {
-        return RegistrationDTO.builder()
-                .id(101)
-                .name("kamila Santos")
-                .dateOfRegistration("10/10/2021")
-                .code(code)
-                .event(event).build();
-    }
-
-    public static RegistrationDTO createNewRegistrationDTOWithoutMeetup(String code) {
-        return RegistrationDTO.builder()
-                .id(1)
-                .name("kamila Santos")
-                .dateOfRegistration("10/10/2021")
-                .code(code)
-                .build();
-    }
-
-    public static Meetup create(String event) {
-        return Meetup.builder()
-                .event(event)
-                .date("23/04/2021")
-                .registered(true).build();
-    }
-
-    public static Optional<Meetup> createMeetupOptional(String event){
-
-        Optional<Meetup> meetupOptinal = Optional.of(Meetup.builder().id(1).event(event).date("23/04/2021").registered(true).build());
-
-        return meetupOptinal;
-    }
-
-    public static Meetup createMeetup(String event) {
-        return Meetup.builder()
-                .id(1)
-                .event(event)
-                .date("23/04/2021")
-                .registered(true).build();
-    }
-
-    public static Registration createNewRegistrationWithMeetup(String code, Meetup meetup) {
-        return Registration.builder()
-                .id(1)
-                .name("kamila Santos")
-                .dateOfRegistration("10/10/2021")
-                .code(code)
-                .meetup(meetup).build();
-    }
-
-    public static Registration createNewRegistrationWithMeetup(RegistrationDTO registrationDTO, Meetup meetup) {
-        return Registration.builder()
-                .id(1)
-                .name(registrationDTO.getName())
-                .dateOfRegistration(registrationDTO.getDateOfRegistration())
-                .code(registrationDTO.getCode())
-                .meetup(meetup).build();
-    }
-
-    public static Registration createNewRegistrationWithoutMeetup(String code) {
-        return createNewRegistrationWithMeetup(code, null);
     }
 }

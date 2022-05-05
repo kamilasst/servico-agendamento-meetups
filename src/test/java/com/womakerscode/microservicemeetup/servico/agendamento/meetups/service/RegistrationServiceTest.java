@@ -55,6 +55,7 @@ public class RegistrationServiceTest {
         Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
         RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, meetupOptional.get().getEvent());
         Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(registrationDTO, meetupOptional.get());
+        registration.setId(1);
 
         Mockito.when(registrationRepository.existsByCode(registrationDTO.getCode())).thenReturn(false);
         Mockito.when(registrationRepository.save(Mockito.any(Registration.class))).thenReturn(registration);
@@ -73,6 +74,7 @@ public class RegistrationServiceTest {
         //Assange
         RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, null);
         Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(registrationDTO.getCode());
+        registration.setId(1);
 
         Mockito.when(registrationRepository.existsByCode(registrationDTO.getCode())).thenReturn(false);
         Mockito.when(registrationRepository.save(Mockito.any(Registration.class))).thenReturn(registration);

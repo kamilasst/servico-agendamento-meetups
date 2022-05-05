@@ -10,7 +10,6 @@ public class RegistrationBuilder {
 
     public static Registration createNewRegistrationWithMeetup(RegistrationDTO registrationDTO, Meetup meetup) {
         return Registration.builder()
-                .id(1)
                 .name(registrationDTO.getName())
                 .dateOfRegistration(registrationDTO.getDateOfRegistration())
                 .code(registrationDTO.getCode())
@@ -19,7 +18,6 @@ public class RegistrationBuilder {
 
     public static Registration createNewRegistrationWithMeetup(String code, Meetup meetup) {
         return Registration.builder()
-                .id(1)
                 .name("kamila Santos")
                 .dateOfRegistration("10/10/2021")
                 .code(code)

@@ -171,8 +171,6 @@ public class MeetupServiceTest {
 
         // assert
         Assertions.assertEquals(1, meetupSavedId);
-
-
     }
 
     @Test

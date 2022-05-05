@@ -2,8 +2,6 @@ package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controll
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.ApplicationControllerAdvice;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupDTO;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupFilterDTO;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupRegistrationDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.MeetupService;
