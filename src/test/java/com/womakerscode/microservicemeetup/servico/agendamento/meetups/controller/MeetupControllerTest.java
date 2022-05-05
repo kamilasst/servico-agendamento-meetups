@@ -50,9 +50,21 @@ public class MeetupControllerTest {
     @DisplayName("Should create on a meetup")
     public void createMeetupTest() throws Exception {
 
- //       MeetupDTO meetupDToBuilder = createNewMeetup();
+        MeetupDTO meetupDToBuilder = createNewMeetup();
+        String json = new ObjectMapper().writeValueAsString(meetupDToBuilder);
 
+        Meetup meetup = Meetup.builder().id(11).event("Womakerscode Dados").date("10/10/2021").build();
 
+        BDDMockito.given(meetupService.save(Mockito.anyString())).willReturn(meetup.getId());
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(MEETUP_API)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mockMvc.perform(request)
+                .andExpect(status().isCreated())
+                .andExpect(content().string("11"));
     }
 
 
@@ -81,7 +93,7 @@ public class MeetupControllerTest {
 //                .andExpect(status().isCreated())
 //                .andExpect(content().string("11"));
 
-    }
+//    }
 
 //    @Test
 //    @DisplayName("Should return error when try to register an a meetup nonexistent")
@@ -132,7 +144,7 @@ public class MeetupControllerTest {
 //    //TODO inserir 2 cenarios de erro e 1 de sucesso
 //
 //
-//    private MeetupDTO createNewMeetup() {
-//        return MeetupDTO.builder().id(101).event("Java").build();
-//    }
-//}
+    private MeetupDTO createNewMeetup() {
+        return MeetupDTO.builder().id(101).event("Java").build();
+    }
+}

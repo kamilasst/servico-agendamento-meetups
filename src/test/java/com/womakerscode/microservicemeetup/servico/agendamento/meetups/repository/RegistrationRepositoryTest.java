@@ -27,10 +27,10 @@ public class RegistrationRepositoryTest {
     private static final String CODE_369 = "369";
 
     @Autowired
-    TestEntityManager entityManager;
+    private TestEntityManager entityManager;
 
     @Autowired
-    RegistrationRepository registrationRepository;
+    private RegistrationRepository registrationRepository;
 
     @Test
     @DisplayName("Should return true when exists an registration already created.")

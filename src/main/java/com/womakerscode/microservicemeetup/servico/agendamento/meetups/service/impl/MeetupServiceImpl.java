@@ -2,7 +2,7 @@ package com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupFilterDTO;
-import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupRegistrationDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessExceptionMessageConstants;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.repository.MeetupRepository;
@@ -14,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,8 +29,7 @@ public class MeetupServiceImpl implements MeetupService {
         this.registrationService = registrationService;
     }
 
-    @Override
-    public Meetup save(Meetup meetup) {
+    private Meetup save(Meetup meetup) {
 
         validate(meetup);
 
@@ -57,8 +55,7 @@ public class MeetupServiceImpl implements MeetupService {
         return meetupRepository.findById(id);
     }
 
-    @Override
-    public Meetup update(Meetup meetup) {
+    private Meetup update(Meetup meetup) {
         return meetupRepository.save(meetup);
     }
 
@@ -89,11 +86,11 @@ public class MeetupServiceImpl implements MeetupService {
     private void validateDelete(Optional<Meetup> meetup) {
 
         if (meetup.isEmpty()){
-            throw new BusinessException("Meetup not found");
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_MEETUP_01);
         }
 
         if(registrationService.existMeetupOnRegistration(meetup.get().getId())){
-            throw new BusinessException("Meetup cannot be deleted because Meetup has Registration");
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_01);
         }
     }
 
@@ -110,17 +107,10 @@ public class MeetupServiceImpl implements MeetupService {
         return meetup;
     }
 
-
-    @Override
-    public List<MeetupRegistrationDTO> findAllRegistrationOnMeetup(MeetupFilterDTO meetupFilterDTO) {
-        List<MeetupRegistrationDTO> registrationOnMeetupDto = meetupRepository.findAllRegistrationOnMeetup(meetupFilterDTO.getEvent());
-        return registrationOnMeetupDto;
-    }
-
     private void validate(Optional<Meetup> meetupOptional){
 
         if(meetupOptional.isEmpty()){
-            throw new BusinessException("Meetup not found");
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_MEETUP_01);
         }
 
         validate(meetupOptional.get());
@@ -128,16 +118,16 @@ public class MeetupServiceImpl implements MeetupService {
 
     private void validate(Meetup meetup){
 
-        if(meetup == null){
-            throw new BusinessException("Meetup not found");
+        if (meetup == null) {
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_MEETUP_01);
         }
 
-        if(StringUtils.isBlank(meetup.getEvent())){
-            throw new BusinessException("Event cannot be null");
+        if (StringUtils.isBlank(meetup.getEvent())){
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_MEETUP_02);
         }
 
         if (StringUtils.isBlank(meetup.getDate())) {
-            throw new BusinessException("Date cannot be null");
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_MEETUP_03);
         }
     }
 }

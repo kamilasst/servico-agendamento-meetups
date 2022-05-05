@@ -2,6 +2,7 @@ package com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessExceptionMessageConstants;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.repository.RegistrationRepository;
@@ -10,7 +11,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RegistrationServiceImpl implements RegistrationService {
@@ -105,10 +110,25 @@ public class RegistrationServiceImpl implements RegistrationService {
         return count > 0;
     }
 
+    @Override
+    public Map<Meetup, List<Registration>> findGrouped(String event) {
+
+        List<Registration> registrations = new ArrayList<>();
+        if (StringUtils.isBlank(event)){
+            registrations = registrationRepository.findAll();
+        } else {
+            registrations = registrationRepository.findByEvent(event);
+        }
+
+        return registrations.stream()
+                .filter(r -> r.getMeetup() != null)
+                .collect(Collectors.groupingBy(Registration::getMeetup));
+    }
+
     private Registration save(Registration registration) {
 
         if (registrationRepository.existsByCode(registration.getCode())){
-            throw new BusinessException("Registration already created");
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_02);
         }
 
         return registrationRepository.save(registration);
@@ -120,28 +140,28 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     private void validateRegistration(Optional<Registration> registrationBd) {
         if (registrationBd.isEmpty()) {
-            throw new BusinessException("Registration code not found");
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_03);
         }
     }
 
     private void validateMeetUp(Optional<Meetup> meetupOptional) {
 
         if(meetupOptional.isEmpty()) {
-            throw new BusinessException("Meetup not found");
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_MEETUP_01);
         }
     }
 
     private void validateCode(String code) {
 
         if(StringUtils.isBlank(code)){
-            throw new BusinessException("Invalid code");
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_04);
         }
     }
 
     private void validateRegistrationDTO(RegistrationDTO registrationDTO) {
 
         if (registrationDTO == null || StringUtils.isBlank(registrationDTO.getCode())) {
-            throw new BusinessException("Registration code cannot be null");
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_05);
         }
     }
 

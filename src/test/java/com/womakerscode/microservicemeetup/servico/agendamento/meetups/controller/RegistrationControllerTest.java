@@ -3,6 +3,7 @@ package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controll
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.resource.RegistrationController;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.RegistrationService;
@@ -47,35 +48,35 @@ public class RegistrationControllerTest {
     @MockBean
     private RegistrationService registrationService;
 
-//    @Test
-//    @DisplayName("Should create a registratiom with success")
-//    public void createRegistrationTest() throws Exception{
-//
-//        //cenario
-//        RegistrationDTO registrationDTOBuilder = createNewRegistration();
-//        Registration savedRegistration = Registration.builder().id(101)
-//                .name("Kamila Santos").dateOfRegistration("10/10/2021").code("001").build();
-//
-//        //execucao
-//        BDDMockito.given(registrationService.save(any(Registration.class))).willReturn(savedRegistration);// BDDMockito simula a camada do usuário
-//
-//        String json = new ObjectMapper().writeValueAsString(registrationDTOBuilder);
-//
-//        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-//                .post(REGISTRATION_API)
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .content(json);
-//
-//        // verificacao, assert....
-//        mockMvc
-//                .perform(request)
-//                .andExpect(status().isCreated())
-//                .andExpect(jsonPath("id").value(101))
-//                .andExpect(jsonPath("name").value(registrationDTOBuilder.getName()))
-//                .andExpect(jsonPath("dateOfRegistration").value(registrationDTOBuilder.getDateOfRegistration()))
-//                .andExpect(jsonPath("registration").value(registrationDTOBuilder.getCode()));
-//    }
+    @Test
+    @DisplayName("Should create a registratiom with success")
+    public void createRegistrationTest() throws Exception{
+
+        //cenario
+        RegistrationDTO registrationDTOBuilder = createNewRegistration();
+        Registration savedRegistration = Registration.builder().id(101)
+                .name("Kamila Santos").dateOfRegistration("10/10/2021").code("001").build();
+
+        //execucao
+        BDDMockito.given(registrationService.save(any(RegistrationDTO.class), any(Optional.class))).willReturn(101);// BDDMockito simula a camada do usuário
+
+        String json = new ObjectMapper().writeValueAsString(registrationDTOBuilder);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .post(REGISTRATION_API)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        // verificacao, assert....
+        mockMvc
+                .perform(request)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("id").value(101))
+                .andExpect(jsonPath("name").value(registrationDTOBuilder.getName()))
+                .andExpect(jsonPath("dateOfRegistration").value(registrationDTOBuilder.getDateOfRegistration()))
+                .andExpect(jsonPath("registration").value(registrationDTOBuilder.getCode()));
+    }
 
     @Test
     @DisplayName("Should throw an exception when not have dara enough for the test")

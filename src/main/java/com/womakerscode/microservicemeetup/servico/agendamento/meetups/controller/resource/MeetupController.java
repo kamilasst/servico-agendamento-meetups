@@ -111,16 +111,4 @@ public class MeetupController {
             return (Page<Meetup>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
-
-    // TODO ksst
-    // 2) try catch
-    // 3) validacao event null
-    @GetMapping("/findAllRegistrationOnMeetup")
-    public List<MeetupRegistrationDTO> findAllRegistrationOnMeetup(@RequestBody MeetupFilterDTO dto) {
-
-        List<MeetupRegistrationDTO> meetupRegistrationsDto = meetupService.findAllRegistrationOnMeetup(dto);
-
-        return meetupRegistrationsDto;
-    }
 }

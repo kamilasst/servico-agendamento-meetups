@@ -19,7 +19,7 @@ public class SwaggerConfig {
     public Docket docket() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
-                .apis( RequestHandlerSelectors.basePackage("com.bootcamp.microservicemeetup.controller.resource") )
+                .apis( RequestHandlerSelectors.basePackage("com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.resource") )
                 .paths(PathSelectors.any())
                 .build()
                 .apiInfo(apiInfo());

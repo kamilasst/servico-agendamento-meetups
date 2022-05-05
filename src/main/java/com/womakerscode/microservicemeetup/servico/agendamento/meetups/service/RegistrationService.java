@@ -6,6 +6,8 @@ import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.ent
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface RegistrationService {
@@ -23,4 +25,6 @@ public interface RegistrationService {
     boolean existMeetupOnRegistration(Integer id);
 
     Registration addMeetupInRegistration(RegistrationDTO registrationDTO, Optional<Meetup> meetupOptional);
+
+    Map<Meetup, List<Registration>> findGrouped(String event);
 }

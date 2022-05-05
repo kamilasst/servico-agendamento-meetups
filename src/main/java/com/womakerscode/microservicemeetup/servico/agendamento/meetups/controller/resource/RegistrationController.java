@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -75,38 +76,6 @@ public class RegistrationController {
         }
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<Registration> update(@RequestBody RegistrationDTO registrationDTO) {
-
-        try {
-            Registration registrationUpdated = registrationService.update(registrationDTO);
-
-            return ResponseEntity.ok(registrationUpdated);
-
-        } catch (BusinessException e) {
-            return ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @DeleteMapping("/deleteByCode/{code}")
-    public ResponseEntity deleteByCode(@PathVariable String code) {
-
-        try {
-            registrationService.delete(code);
-
-            return ResponseEntity.noContent().build();
-
-        } catch (BusinessException e) {
-            return ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
     @GetMapping("/findAll")
     public Page<Registration> findAll(Pageable pageRequest) {
 
@@ -126,6 +95,38 @@ public class RegistrationController {
         }
     }
 
+    @GetMapping("/findGrouped")
+    public ResponseEntity<Map<Meetup, List<Registration>>> findGrouped(@RequestBody RegistrationDTO registrationDTO) {
+
+        try {
+            Map<Meetup, List<Registration>> registrationGrouped = registrationService.findGrouped(registrationDTO.getEvent());
+
+            return ResponseEntity.ok(registrationGrouped);
+
+        } catch (BusinessException e) {
+            return ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<Registration> update(@RequestBody RegistrationDTO registrationDTO) {
+
+        try {
+            Registration registrationUpdated = registrationService.update(registrationDTO);
+
+            return ResponseEntity.ok(registrationUpdated);
+
+        } catch (BusinessException e) {
+            return ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @PutMapping("/addMeetupInRegistration")
     public ResponseEntity<Registration> addMeetupInRegistration(@RequestBody RegistrationDTO registrationDTO) {
 
@@ -136,6 +137,22 @@ public class RegistrationController {
             Registration registration = registrationService.addMeetupInRegistration(registrationDTO, meetupOptional);
 
             return ResponseEntity.ok(registration);
+
+        } catch (BusinessException e) {
+            return ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/deleteByCode/{code}")
+    public ResponseEntity deleteByCode(@PathVariable String code) {
+
+        try {
+            registrationService.delete(code);
+
+            return ResponseEntity.noContent().build();
 
         } catch (BusinessException e) {
             return ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));

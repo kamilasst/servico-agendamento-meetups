@@ -12,22 +12,15 @@ import java.util.Optional;
 
 public interface MeetupService  {
 
-    Meetup save(Meetup meetup);
-
     Integer save(String event);
-
-    Optional<Meetup> findById(Integer id);
-
-    Meetup update(Meetup meetup);
 
     Meetup update(MeetupDTO meetupDto);
 
     void delete(Integer id);
 
+    Optional<Meetup> findById(Integer id);
+
     Optional<Meetup> findByEvent(MeetupFilterDTO filterDTO);
 
     Page<Meetup> findAll(Pageable pageRequest);
-
-    List<MeetupRegistrationDTO> findAllRegistrationOnMeetup(MeetupFilterDTO meetupFilterDTO);
-
 }

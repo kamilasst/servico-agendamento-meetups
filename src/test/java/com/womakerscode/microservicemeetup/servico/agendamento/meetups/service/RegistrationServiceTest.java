@@ -2,22 +2,21 @@ package com.womakerscode.microservicemeetup.servico.agendamento.meetups.service;
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessExceptionMessageConstants;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.repository.RegistrationRepository;
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.impl.RegistrationServiceImpl;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.util.MeetupBuilder;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.util.RegistrationBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -25,45 +24,42 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-
 @ExtendWith(SpringExtension.class)
-@ActiveProfiles("test") //identificar que é um profile de test
+@ActiveProfiles("test")
 public class RegistrationServiceTest {
 
     public static final String CODE_123 = "123";
-    RegistrationService registrationService;
+    public static final String CODE_456 = "456";
 
-//    @Autowired
-//    MeetupService meetupService;
+    private RegistrationService registrationService;
 
     @MockBean
-    RegistrationRepository registrationRepository;
+    private RegistrationRepository registrationRepository;
 
     @BeforeEach
     public void setUp(){
 
-        this.registrationService = new RegistrationServiceImpl(registrationRepository); //dependência do service e dar um new na mesma
+        this.registrationService = new RegistrationServiceImpl(registrationRepository);
     }
 
     @Test
-    @DisplayName("Should save an registration")
+    @DisplayName("Should save an registration with meetup")
     public void saveRegistrationWithMeetup(){
 
-        //assange
+        //Assange
         Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithMeetup(CODE_123, meetupOptional.get().getEvent());
-        Registration registration = createNewRegistrationWithMeetup(registrationDTO, meetupOptional.get());
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, meetupOptional.get().getEvent());
+        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(registrationDTO, meetupOptional.get());
 
         Mockito.when(registrationRepository.existsByCode(registrationDTO.getCode())).thenReturn(false);
         Mockito.when(registrationRepository.save(Mockito.any(Registration.class))).thenReturn(registration);
 
-        //act
+        //Act
         Integer idRegistrationSaved = registrationService.save(registrationDTO, meetupOptional);
 
         //Assert
@@ -74,146 +70,43 @@ public class RegistrationServiceTest {
     @DisplayName("Should save an registration without Meetup")
     public void saveRegistrationWithoutMeetup(){
 
-        //assange
-        RegistrationDTO registrationDTO = createNewRegistrationDTOWithMeetup(CODE_123, null);
-        Registration registration = createNewRegistrationWithMeetup(registrationDTO, null);
+        //Assange
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, null);
+        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(registrationDTO.getCode());
 
         Mockito.when(registrationRepository.existsByCode(registrationDTO.getCode())).thenReturn(false);
         Mockito.when(registrationRepository.save(Mockito.any(Registration.class))).thenReturn(registration);
 
-        //act
-        Integer idRegistrationSaved = registrationService.save(registrationDTO, null);
+        //Act
+        Integer idRegistrationSaved = registrationService.save(registrationDTO, Optional.empty());
 
         //Assert
         Assertions.assertEquals(1, idRegistrationSaved);
     }
 
-//    @Test
-//    @DisplayName("Should throw business error when thy to save a new registration with a registration duplicated")
-//    public void shouldNotSaveAsRegistrationDuplicatedTest(){
-//
-//        //cenario
-//        Registration registration = createValidRegistrationDefault();
-//        Mockito.when(registrationRepository.existsByCode(Mockito.any())).thenReturn(true); //Mockito.any() - qualquer dado que ele encontre que esteja duplicado ali dentro
-//
-//        //execução
-//        //Chamando uma Throwable pq é o que quero que retorne
-//        Throwable exceptions = Assertions.catchThrowable( () -> registrationService.save(registration));
-//
-//        //assert
-//        assertThat(exceptions)
-//                .isInstanceOf(BusinessException.class)
-//                .hasMessage("Registration already created");
-//
-//        //Não mockamos exceções
-//        //Mockito vai verificar que dentro do repository ele nunca vai salvar um registro que esteja já criado
-//        Mockito.verify(registrationRepository, Mockito.never()).save(registration); // entra na instância da classe que estamos trazendo mockadae do objeto que queremos buscar esse retorno e verifica se aquilo aconteceu ou nãp
-//
-//    }
-
     @Test
-    @DisplayName("Should get an registration without meetup by Code ")
-    public void getByRegistrationWithoutMeetupCodeTest(){
+    @DisplayName("Should throw business error when thy to save a new registration with a registration duplicated")
+    public void notSaveAsRegistrationDuplicated(){
 
-        //arrange
-        String code = "002";
-        Registration registration = createNewRegistrationWithoutMeetup(code);
+        //Assange
+        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, meetupOptional.get().getEvent());
+        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(registrationDTO, meetupOptional.get());
 
-        Mockito.when(registrationRepository.findByCode(code)).thenReturn(Optional.of(registration));//of -Retorna um Optional com o valor não nulo presente especificado.
+        Mockito.when(registrationRepository.existsByCode(registrationDTO.getCode())).thenReturn(true);
 
-        //act
-        Optional<Registration> foundRegistration = registrationService.findByCode(code);
-
-        //assert
-        assertThat(foundRegistration.isPresent()).isTrue();
-        Assertions.assertEquals(registration, foundRegistration.get());
-    }
-
-    @Test
-    @DisplayName("Should get an registration with meetup by Code ")
-    public void getByRegistrationWithMeetupCodeTest(){
-
-        //arrange
-        Meetup meetup = MeetupBuilder.createJava();
-        String code = "002";
-        Registration registration = createNewRegistrationWithMeetup(code, meetup);
-
-        Mockito.when(registrationRepository.findByCode(code)).thenReturn(Optional.of(registration));//of -Retorna um Optional com o valor não nulo presente especificado.
-
-        //act
-        Optional<Registration> foundRegistration = registrationService.findByCode(code);
-
-        //assert
-        assertThat(foundRegistration.isPresent()).isTrue(); //isPresent() - Retorna true se houver um valor presente, caso contrário false
-        Assertions.assertEquals(registration, foundRegistration.get());
-        Assertions.assertEquals(meetup, foundRegistration.get().getMeetup());
-    }
-    @Test
-    @DisplayName("Should return empty when get an registration by code when doesn't exists")
-    public void registrationNotFoundByCodeTest(){
-
-        //arrange
-        String code = "11";
-        Mockito.when(registrationRepository.findByCode(code)).thenReturn(Optional.empty());
-
-        //act
-        Optional<Registration> registration = registrationService.findByCode(code);
+        //Act
+        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+            registrationService.save(registrationDTO, meetupOptional);});
 
         //Assert
-        assertThat(registration.isPresent()).isFalse();
+        Assertions.assertEquals("Registration already created", exception.getMessage());
+        Mockito.verify(registrationRepository, Mockito.never()).save(registration);
     }
 
-//    @Test
-//    @DisplayName("Should Exist Meetup On Registration")
-//    public void addMeetupOnRegistration(){
-//
-//        Optional<Meetup> meetupJava = MeetupBuilder.createMeetupOptional();
-//
-//        Registration registrationWithoutMeetup = createNewRegistrationWithoutMeetup("123");
-//        Registration registrationWithMeetup = createNewRegistrationWithMeetup("123", meetupJava.get());
-//
-//        RegistrationDTO registrationDTO = createNewRegistrationDTOWithMeetup("123", meetupJava.get());
-//
-//        Mockito.when(registrationRepository.findByCode(Mockito.anyString())).thenReturn(Optional.of(registrationWithoutMeetup));
-//        Mockito.when(registrationService.updregistrationWithMeetup))).the
-//
-//       Registration registration2 = registrationService.addMeetupInRegistration(registrationDTO, meetupJava);
-//
-//
-//
-//    }
-
-//    @Test
-//    @DisplayName("Should find all registrations")
-//    public void findAllRegistrationTest(){
-//
-//        //arrange
-//        Registration registration = createNewRegistrationWithoutMeetup("123");
-//        PageRequest pageRequest = PageRequest.of(0,10);
-//
-//        List<Registration> listRegistration = Arrays.asList(registration);
-//        Page<Registration> page = new PageImpl<Registration>(Arrays.asList(registration),
-//                PageRequest.of(1,10), 1);
-//
-//        //act
-//        Mockito.when(registrationRepository.findAll(Mockito.any(Example.class),
-//                Mockito.any(PageRequest.class))).thenReturn(page);
-//
-//        Page<Registration> result = registrationService.findAll(pageRequest);
-//
-//        //assert
-//        assertThat(result.getTotalElements()).isEqualTo(1);
-//        assertThat(result.getContent()).isEqualTo(listRegistration);
-//        assertThat(result.getPageable().getPageNumber()).isEqualTo(0);
-//        assertThat(result.getPageable().getPageSize()).isEqualTo(10);
-//
-//    }
-
-
-
     @Test
-    @DisplayName("Should delete an registration success")
-    public void deleteRegistrationSuccess(){
+    @DisplayName("Should delete an registration with success")
+    public void deleteRegistrationWithSuccess(){
 
         //arrange
         Registration registration = Registration.builder().id(11).code(CODE_123).build();
@@ -221,152 +114,264 @@ public class RegistrationServiceTest {
         //Mock
         Mockito.when(registrationRepository.findByCode(CODE_123)).thenReturn(Optional.of(registration));
 
-        //act
+        //Act
         assertDoesNotThrow(() -> registrationService.delete(CODE_123));
 
+        //Assert
         Mockito.verify(registrationRepository, Mockito.times(1)).delete(registration);
     }
 
     @Test
     @DisplayName("Should delete an registration invalid code")
-    public void deleteRegistrationInvalidCode(){
+    public void deleteNotRegistrationInvalidCode(){
 
+        //Act
         BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
             registrationService.delete(null);
         });
 
-        Assertions.assertEquals("Invalid code", exception.getMessage());
+        //Assert
+        Assertions.assertEquals(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_04, exception.getMessage());
+        Mockito.verify(registrationRepository, Mockito.never()).save(Mockito.any(Registration.class));
     }
 
     @Test
-    @DisplayName("Should delete an registration invalid code")
-    public void deleteRegistrationCodeNotFound(){
+    @DisplayName("Should not delete an registration with code not found")
+    public void deleteNotRegistrationCodeNotFound(){
 
+        //Arrange
         //Mock
         Mockito.when(registrationRepository.findByCode(CODE_123)).thenReturn(Optional.empty());
 
+        //Act
         BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
             registrationService.delete(CODE_123);
         });
 
-        Assertions.assertEquals("Registration code not found", exception.getMessage());
+        //Assert
+        Assertions.assertEquals(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_03, exception.getMessage());
     }
-
-//    @Test
-//    @DisplayName("Should update an registration")
-//    public void updateRegistrationTest(){
-//
-//        //cenario
-//        Integer id = 11;
-//        Registration updatingRegistration = Registration.builder().id(11).build();
-//
-//        Registration updatedRegistration = createValidRegistrationDefault();
-//        updatedRegistration.setId(id);
-//
-//        Mockito.when(registrationRepository.save(updatingRegistration)).thenReturn(updatedRegistration);
-//
-//        //execucao
-//        Registration registration = registrationService.update(updatingRegistration);
-//
-//        //assert
-//        assertThat(registration.getId()).isEqualTo(updatedRegistration.getId());
-//        assertThat(registration.getName()).isEqualTo(updatedRegistration.getName());
-//        assertThat(registration.getDateOfRegistration()).isEqualTo(updatedRegistration.getDateOfRegistration());
-//        assertThat(registration.getCode()).isEqualTo(updatedRegistration.getCode());
-//    }
-
-//    @Test
-//    @DisplayName("Should filter registrations must by properties")
-//    public void findRegistrationTest(){
-//
-//        //cenario
-//        Registration registration = createValidRegistrationDefault();
-//        PageRequest pageRequest = PageRequest.of(0,10);
-//
-//        List<Registration> listRegistration = Arrays.asList(registration);
-//        Page<Registration> page = new PageImpl<Registration>(Arrays.asList(registration),
-//                PageRequest.of(0,10), 1);
-//
-//        //Execucao
-//        Mockito.when(registrationRepository.findAll(Mockito.any(Example.class),
-//                Mockito.any(PageRequest.class))).thenReturn(page);
-//
-//        Page<Registration> result = registrationService.findAll(pageRequest);
-//
-//        //assert
-//        assertThat(result.getTotalElements()).isEqualTo(1);
-//        assertThat(result.getContent()).isEqualTo(listRegistration);
-//        assertThat(result.getPageable().getPageNumber()).isEqualTo(0);
-//        assertThat(result.getPageable().getPageSize()).isEqualTo(10);
-//
-//    }
 
     @Test
-    @DisplayName("Should get an Registration model by registration attribute") //buscar um Registration model pelo registration Attibute
-    public void getRegistrationByregistrationAttibute(){
+    @DisplayName("Should update an registration with Success")
+    public void updateRegistrationWithSuccess(){
 
-        //cenario
-        String registrationAttribute = "1234";
+        //Arrange
+        Meetup meetup = MeetupBuilder.createJava();
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, "Java");
+        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_123, meetup);
+        registration.setName("Maria");
+        registration.setDateOfRegistration("12/04/22");
 
-        Mockito.when(registrationRepository.findByCode(registrationAttribute))
-                .thenReturn(Optional.of(Registration.builder().id(11).code(registrationAttribute).build()));
+        Mockito.when(registrationRepository.findByCode(registrationDTO.getCode())).thenReturn(Optional.of(registration));
+        Mockito.when(registrationRepository.save(Mockito.any(Registration.class))).thenReturn(registration);
 
-        //Execucao
-        Optional<Registration> registration = registrationService.findByCode(registrationAttribute);
+        //Act
+        Registration registrationUpdated = registrationService.update(registrationDTO);
 
-        //assert
-        assertThat(registration.isPresent()).isTrue();
-        assertThat(registration.get().getId()).isEqualTo(11);
-        assertThat(registration.get().getCode()).isEqualTo(registrationAttribute);
-
-        Mockito.verify(registrationRepository, Mockito.times(1)).findByCode(registrationAttribute); //Mockito.times(1) - verifico se o meu repository está sendo invocado pelo ao menos uma vez e quero que ele implemente o findByRegistration
+        //Assert
+        Assertions.assertEquals(registration, registrationUpdated);
     }
 
-//    //Utilizando o padrão builder eu mock os objetos
-//    private Registration createValidRegistrationDefault() {
-//        return createValidRegistration(101, "Kamila Santos","01/04/2022", "001");
-//    }
-//
-//    private Registration createValidRegistration(Integer id, String name, String date, String code) {
-//        return Registration.builder() //criando o padrão builder eu mock os meus objetos
-//                .id(id)
-//                .name(name)
-//                .dateOfRegistration("01/04/2022")
-//                .code(code)
-//                .build();
-//    }
-    public static Registration createNewRegistrationWithMeetup(String code, Meetup meetup) {
-        return Registration.builder()
-                .id(1)
-                .name("kamila Santos")
-                .dateOfRegistration("10/10/2021")
-                .code(code)
-                .meetup(meetup).build();
+    @Test
+    @DisplayName("Should not update a null registration")
+    public void UpdateNotANullRegistrationDTO(){
+
+        //Arrange
+        Mockito.when(registrationRepository.findByCode(Mockito.isNull())).thenReturn(Optional.empty());
+
+        //Act
+        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+            registrationService.update(null);
+        });
+
+        //Assert
+        Assertions.assertEquals(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_05, exception.getMessage());
+        Mockito.verify(registrationRepository, Mockito.never()).delete(Mockito.any(Registration.class));
     }
 
-    private static Registration createNewRegistrationWithoutMeetup(String code) {
-        return createNewRegistrationWithMeetup(code, null);
+    @Test
+    @DisplayName("Should not update an empty registration ")
+    public void UpdateNotEmptyRegistration(){
+
+        //Arrange
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, "Java");
+
+        Mockito.when(registrationRepository.findByCode(Mockito.anyString())).thenReturn(Optional.empty());
+
+        //Act
+        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+            registrationService.update(registrationDTO);
+        });
+
+        //Assert
+        Assertions.assertEquals(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_03, exception.getMessage());
+        Mockito.verify(registrationRepository, Mockito.never()).delete(Mockito.any(Registration.class));
     }
 
+    @Test
+    @DisplayName("Should get by code the registration without meetup ")
+    public void findByCodeRegistrationWithoutMeetup(){
 
-    private static RegistrationDTO createNewRegistrationDTOWithMeetup(String code, String event) {
-        return RegistrationDTO.builder()
-                .id(1)
-                .name("kamila Santos")
-                .dateOfRegistration("10/10/2021")
-                .code(code)
-                .event(event).build();
+        //Arrange
+        String code = CODE_123;
+        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(code);
+
+        Mockito.when(registrationRepository.findByCode(code)).thenReturn(Optional.of(registration));
+
+        //Act
+        Optional<Registration> foundRegistration = registrationService.findByCode(code);
+
+        //Assert
+        assertThat(foundRegistration.isPresent()).isTrue();
+        Assertions.assertEquals(registration, foundRegistration.get());
     }
 
-    private static Registration createNewRegistrationWithMeetup(RegistrationDTO registrationDTO, Meetup meetup) {
-        return Registration.builder()
-                .id(1)
-                .name(registrationDTO.getName())
-                .dateOfRegistration(registrationDTO.getDateOfRegistration())
-                .code(registrationDTO.getCode())
-                .meetup(meetup).build();
+    @Test
+    @DisplayName("Should get by code the registration with meetup")
+    public void findByCodeRegistrationWithMeetup(){
+
+        //Arrange
+        Meetup meetup = MeetupBuilder.createJava();
+        String code = CODE_123;
+        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(code, meetup);
+
+        Mockito.when(registrationRepository.findByCode(code)).thenReturn(Optional.of(registration));
+
+        //Act
+        Optional<Registration> foundRegistration = registrationService.findByCode(code);
+
+        //Assert
+        assertThat(foundRegistration.isPresent()).isTrue();
+        Assertions.assertEquals(registration, foundRegistration.get());
+        Assertions.assertEquals(meetup, foundRegistration.get().getMeetup());
     }
 
+    @Test
+    @DisplayName("Should return empty when get an registration by code when doesn't exists")
+    public void findByCodeRegistrationNotFound(){
 
+        //Arrange
+        String code = CODE_456;
+        Mockito.when(registrationRepository.findByCode(code)).thenReturn(Optional.empty());
 
+        //Act
+        Optional<Registration> registration = registrationService.findByCode(code);
+
+        //Assert
+        assertThat(registration.isPresent()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should exist Meetup On Registration")
+    public void existMeetupOnRegistration() {
+
+        //Assange
+        Integer id = 1;
+        Mockito.when(registrationRepository.getCountRegistrationAssociatedMeetup(id)).thenReturn(1);
+
+        //Act
+        boolean meetupExist = registrationService.existMeetupOnRegistration(id);
+
+        //Assert
+        assertThat(meetupExist).isTrue();
+    }
+
+    @Test
+    @DisplayName("Should exist not Meetup in Registration")
+    public void existNotMeetupInRegistration() {
+
+        //Assange
+        Integer id = 1;
+        Mockito.when(registrationRepository.getCountRegistrationAssociatedMeetup(id)).thenReturn(0);
+
+        //Act
+        boolean meetupExist = registrationService.existMeetupOnRegistration(id);
+
+        //Assert
+        assertThat(meetupExist).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should find all registrations by page request.")
+    public void findByAllRegistration(){
+
+        //Assange
+        Meetup meetup = MeetupBuilder.createJava();
+        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_123, meetup);
+        var listRegistration = Arrays.asList(registration);
+
+        Page<Registration> page = new PageImpl(listRegistration, PageRequest.of(0,10), 0);
+
+        Mockito.when(registrationRepository.findAll(Mockito.any(PageRequest.class))).thenReturn(page);
+
+        // act
+        PageRequest pageRequest = PageRequest.of(1,1);
+        Page<Registration> pageReturn = registrationService.findAll(pageRequest);
+
+        // assert
+        assertThat(pageReturn.getTotalElements()).isEqualTo(1);
+        assertThat(pageReturn.getContent()).isEqualTo(listRegistration);
+        assertThat(pageReturn.getPageable().getPageNumber()).isEqualTo(0);
+        assertThat(pageReturn.getPageable().getPageSize()).isEqualTo(10);
+    }
+
+    @Test
+    @DisplayName("Should add Meetup in Registration")
+    public void addMeetupInRegistration() {
+
+        //Assange
+        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup(CODE_123);
+        registrationDTO.setEvent(meetupOptional.get().getEvent());
+
+        Registration registrationWithoutMeetup = RegistrationBuilder.createNewRegistrationWithoutMeetup(registrationDTO.getCode());
+        Registration registrationWithMeetup = RegistrationBuilder.createNewRegistrationWithMeetup(registrationDTO, meetupOptional.get());
+
+        Mockito.when(registrationRepository.findByCode(Mockito.anyString())).thenReturn(Optional.of(registrationWithoutMeetup));
+        Mockito.when(registrationService.update(registrationDTO)).thenReturn(registrationWithMeetup);
+
+        //Act
+        Registration registrationWithMeetupReturn = registrationService.addMeetupInRegistration(registrationDTO, meetupOptional);
+
+        //Assert
+        Assertions.assertEquals(registrationWithMeetup, registrationWithMeetupReturn);
+    }
+
+    @Test
+    @DisplayName("Should not add Meetup in Registration when empty meetup")
+    public void AddNotMeetupToRegistrationWhenEmptyMeetup() {
+
+        //Assange
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup(CODE_123);
+
+        //Act
+        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+            registrationService.addMeetupInRegistration(registrationDTO, Optional.empty());
+        });
+
+        //Assert
+        Assertions.assertEquals(BusinessExceptionMessageConstants.MESSAGE_ERROR_MEETUP_01, exception.getMessage());
+        Mockito.verify(registrationRepository, Mockito.never()).delete(Mockito.any(Registration.class));
+    }
+
+    @Test
+    @DisplayName("Should not add Meetup when RegistrationDTO code not found")
+    public void AddNotMeetupWhenRegistrationDTOCodeNotFound() {
+
+        //Assange
+        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup(CODE_123);
+
+        Mockito.when(registrationRepository.findByCode(registrationDTO.getCode())).thenReturn(Optional.empty());
+
+        //Act
+        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+            registrationService.addMeetupInRegistration(registrationDTO, meetupOptional);
+        });
+
+        //Assert
+        Assertions.assertEquals(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_03, exception.getMessage());
+        Mockito.verify(registrationRepository, Mockito.never()).delete(Mockito.any(Registration.class));
+    }
 }
