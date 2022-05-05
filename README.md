@@ -15,20 +15,20 @@ Consiste num pequeno microservice que irá ter lado de client e server no moment
 - Azure functions
 
 ## 👩‍💻 TODO list
-- [ ] Implementação da classe se servico
-- [ ] Testes no service 
-- [ ] Implementação da classe de controlle da web
-- [ ] Testes de contrato no controller 
-- [ ] Testes unitarios no repository 
-- [ ] Implementação do repository
-- [ ] Swagger
-- [ ] Testes locais via postman
-- [ ] Deploy no azure
+- [x] Implementação da classe se servico
+- [x] Testes no service 
+- [x] Implementação da classe de controlle da web
+- [x] Testes de contrato no controller 
+- [x] Testes unitarios no repository 
+- [x] Implementação do repository
+- [x] Swagger
+- [x] Testes locais via postman
+- [x] Deploy no azure
 
 ## TODO ALUNAS - camada Meetup
-- [ ] Testes do repository - 19 testes unitários
-- [ ] Testes do controller - 32 testes unitários
-- [ ] Testes do service - 29 testes unitários
+- [x] Testes do repository - 19 testes unitários
+- [x] Testes do controller - 32 testes unitários
+- [x] Testes do service - 29 testes unitários
 
 
 Totalizando 80 testes unitários.
