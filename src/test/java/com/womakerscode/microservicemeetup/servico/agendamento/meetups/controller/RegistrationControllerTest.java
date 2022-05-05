@@ -1,14 +1,21 @@
 package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupFilterDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.resource.RegistrationController;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessExceptionMessageConstants;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.repository.RegistrationRepository;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.MeetupService;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.RegistrationService;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.BDDMockito;
@@ -27,128 +34,252 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(SpringExtension.class)  //SprinExtention - p/ o compilador entender que é uma camada de teste
-@ActiveProfiles("test") //Ativa a profile de teste da nossa classe Test
-@WebMvcTest(controllers = {RegistrationController.class}) //coloca o que vai no contexto dessa anotação. Inserimos uma camada de contexto controller que estamos trabalhando {define a classe que vai querer esta fazendo isso}
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
+@WebMvcTest(controllers = {RegistrationController.class})
 @AutoConfigureMockMvc
 public class RegistrationControllerTest {
 
-    static String REGISTRATION_API = "/api/registration"; //nessa String static estou definindo a rota da API, antes de acessar qualquer função do controller tem que acessar essa rota
+    static String REGISTRATION_API = "/api/registration";
 
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     @MockBean
     private RegistrationService registrationService;
 
+    @MockBean
+    private MeetupService meetupService;
+
     @Test
-    @DisplayName("Should create a registratiom with success")
-    public void createRegistrationTest() throws Exception{
+    @DisplayName("Should create a registration with meetup with success")
+    public void createRegistrationWithMeetup() throws Exception{
 
-        //cenario
-        RegistrationDTO registrationDTOBuilder = createNewRegistration();
-        Registration savedRegistration = Registration.builder().id(101)
-                .name("Kamila Santos").dateOfRegistration("10/10/2021").code("001").build();
+        // arrange
+        Optional<Meetup> meetupOptional = createMeetupOptional("Java");
+        RegistrationDTO registrationDTO = createNewRegistrationDTOWithMeetup("123", meetupOptional.get().getEvent());
+        Registration registrationSaved = createNewRegistrationWithMeetup("123", meetupOptional.get());
 
-        //execucao
-        BDDMockito.given(registrationService.save(any(RegistrationDTO.class), any(Optional.class))).willReturn(101);// BDDMockito simula a camada do usuário
+        String json = new ObjectMapper().writeValueAsString(registrationDTO);
 
-        String json = new ObjectMapper().writeValueAsString(registrationDTOBuilder);
+        BDDMockito.given(meetupService.findByEvent(Mockito.any(MeetupFilterDTO.class))).willReturn(meetupOptional);
+        BDDMockito.given(registrationService.save(Mockito.any(RegistrationDTO.class), Mockito.any(Optional.class))).willReturn(registrationSaved.getId());
 
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .post(REGISTRATION_API)
-                .contentType(MediaType.APPLICATION_JSON)
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(REGISTRATION_API.concat("/create"))
                 .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(json);
 
-        // verificacao, assert....
-        mockMvc
-                .perform(request)
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("id").value(101))
-                .andExpect(jsonPath("name").value(registrationDTOBuilder.getName()))
-                .andExpect(jsonPath("dateOfRegistration").value(registrationDTOBuilder.getDateOfRegistration()))
-                .andExpect(jsonPath("registration").value(registrationDTOBuilder.getCode()));
+        mockMvc.perform(request)
+                .andExpect(status().isCreated());
     }
 
     @Test
-    @DisplayName("Should throw an exception when not have dara enough for the test")
-    public void createInvalidRegistrationTest() throws Exception{
+    @DisplayName("Should create a registration without Meetup with success")
+    public void createRegistrationWithoutMeetup() throws Exception{
 
-        String json = new ObjectMapper().writeValueAsString(new RegistrationDTO());
+        // arrange
+        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("123");
+        Registration registrationSaved = createNewRegistrationWithoutMeetup("123");
 
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .post(REGISTRATION_API)
-                .contentType(MediaType.APPLICATION_JSON)
+        String json = new ObjectMapper().writeValueAsString(registrationDTO);
+
+        BDDMockito.given(meetupService.findByEvent(Mockito.any(MeetupFilterDTO.class))).willReturn(null);
+        BDDMockito.given(registrationService.save(Mockito.any(RegistrationDTO.class), Mockito.any(Optional.class))).willReturn(registrationSaved.getId());
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(REGISTRATION_API.concat("/create"))
                 .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mockMvc.perform(request)
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("Should return error when create registration and return id null")
+    public void createRegistrationErrorTest() throws Exception{
+
+        // arrange
+        Optional<Meetup> meetupOptional = createMeetupOptional("Java");
+        RegistrationDTO registrationDTO = createNewRegistrationDTOWithMeetup("123", meetupOptional.get().getEvent());
+
+        String json = new ObjectMapper().writeValueAsString(registrationDTO);
+
+        BDDMockito.given(meetupService.findByEvent(Mockito.any(MeetupFilterDTO.class))).willReturn(meetupOptional);
+        BDDMockito.given(registrationService.save(Mockito.any(RegistrationDTO.class), Mockito.any(Optional.class))).willReturn(null);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(REGISTRATION_API.concat("/create"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
                 .content(json);
 
         mockMvc.perform(request)
                 .andExpect(status().isBadRequest());
     }
 
-//    @Test
-//    @DisplayName("Should throw an exception when try to create a new registration with an registration already created.")
-//    public void createRegistrationWithDuplicatedRegistration() throws Exception {
-//
-//        RegistrationDTO dto = createNewRegistration();
-//        String json  = new ObjectMapper().writeValueAsString(dto);
-//
-//        BDDMockito.given(registrationService.save(any(Registration.class)))
-//                .willThrow(new BusinessException("Registration already created!"));
-//
-//        MockHttpServletRequestBuilder request  = MockMvcRequestBuilders
-//                .post(REGISTRATION_API)
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .content(json);
-//
-//        mockMvc.perform(request)
-//                .andExpect(status().isBadRequest())
-//                .andExpect(jsonPath("errors", hasSize(1)))
-//                .andExpect(jsonPath("errors[0]").value("Registration already created!"));
-//    }
+    @Test
+    @DisplayName("Should error when try to create a new registration with an registration already created.")
+    public void createNotRegistrationWithDuplicatedRegistration() throws Exception{
+
+        // arrange
+        Optional<Meetup> meetupOptional = createMeetupOptional("Java");
+        RegistrationDTO registrationDTO = createNewRegistrationDTOWithMeetup("123", meetupOptional.get().getEvent());
+
+        BDDMockito.given(meetupService.findByEvent(Mockito.any(MeetupFilterDTO.class))).willReturn(meetupOptional);
+        BDDMockito.given(registrationService.save(Mockito.any(RegistrationDTO.class), Mockito.any(Optional.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_02));
+
+        String json = new ObjectMapper().writeValueAsString(registrationDTO);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(REGISTRATION_API.concat("/create"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mockMvc.perform(request)
+                .andExpect(status().isNotFound());
+    }
 
     @Test
-    @DisplayName("Should get registration information")
-    public void getRegistrationTest() throws Exception{
-        String code = "002";
+    @DisplayName("Should update a registration success")
+    public void updateRegistrationSuccess() throws Exception {
 
-        Registration registration = Registration.builder()
-                .code(code)
-                .name(createNewRegistration().getName())
-                .dateOfRegistration(createNewRegistration().getDateOfRegistration())
-                .code(createNewRegistration().getCode()).build();
+        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("123");
+        Registration registration = createNewRegistrationWithoutMeetup("123");
+        registration.setName("Maria");
+        registration.setDateOfRegistration("21/04/22");
+
+        BDDMockito.given(registrationService.update(Mockito.any(RegistrationDTO.class))).willReturn(registration);
+
+        String jsonRequest = new ObjectMapper().writeValueAsString(registrationDTO);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put(REGISTRATION_API.concat("/update"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        String json = new ObjectMapper().writeValueAsString(registration);
+
+        mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(content().string(json));
+    }
+
+    @Test
+    @DisplayName("Should return error when try to update registration not found.")
+    public void updateRegistrationErrorRegistrationNotFound() throws Exception {
+
+        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("123");
+
+        BDDMockito.given(registrationService.update(Mockito.any(RegistrationDTO.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_04));
+
+        String jsonRequest = new ObjectMapper().writeValueAsString(registrationDTO);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put(REGISTRATION_API.concat("/update"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        mockMvc.perform(request)
+                .andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    @DisplayName("Should return error when try to update registration code is null.")
+    public void updateRegistrationErrorRegistrationCodeIsNull() throws Exception {
+
+        BDDMockito.given(registrationService.update(Mockito.any(RegistrationDTO.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_05));
+
+        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup(null);
+        String json = new ObjectMapper().writeValueAsString(registrationDTO);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put(REGISTRATION_API.concat("/update"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mockMvc.perform(request)
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should not update a registration with registration code empty")
+    public void updateRegistrationErrorRegistrationCodeEmpty() throws Exception {
+
+        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("");
+
+        BDDMockito.given(registrationService.update(Mockito.any(RegistrationDTO.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_04));
+
+        String jsonRequest = new ObjectMapper().writeValueAsString(registrationDTO);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put(REGISTRATION_API.concat("/update"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        mockMvc.perform(request)
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should find Registration by code success.")
+    public void findByCodeRegistrationSuccess() throws Exception {
+
+        String code = "123";
+
+        Registration registration = createNewRegistrationWithoutMeetup(code);
 
         BDDMockito.given(registrationService.findByCode(code)).willReturn(Optional.of(registration));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get(REGISTRATION_API.concat("/" + code))
+                .get(REGISTRATION_API.concat("/findByCode/").concat(code.toString()))
                 .accept(MediaType.APPLICATION_JSON);
+
+        String json = new ObjectMapper().writeValueAsString(registration);
 
         mockMvc.perform(requestBuilder)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("code").value(code))
-                .andExpect(jsonPath("name").value(createNewRegistration().getName()))
-                .andExpect(jsonPath("dateOfRegistration").value(createNewRegistration().getDateOfRegistration()))
-                .andExpect(jsonPath("registration").value(createNewRegistration().getCode()));
+                .andExpect(content().string(json));
     }
 
     @Test
-    @DisplayName("Should return NOT FOUND when the registration doesn't exists")
-    public void registrationNotFoundTest() throws Exception{
+    @DisplayName("Should find Registration with meetup by code success.")
+    public void findByCodeRegistrationWithMeetupSuccess() throws Exception {
 
-        BDDMockito.given(registrationService.findByCode(anyString())).willReturn(Optional.empty());
+        String code = "123";
+        Meetup meetup = createMeetup("Java");
+        Registration registration = createNewRegistrationWithMeetup(code,meetup);
+
+        BDDMockito.given(registrationService.findByCode(code)).willReturn(Optional.of(registration));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get(REGISTRATION_API.concat("/" + 1))
+                .get(REGISTRATION_API.concat("/findByCode/").concat(code.toString()))
+                .accept(MediaType.APPLICATION_JSON);
+
+        String json = new ObjectMapper().writeValueAsString(registration);
+
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isOk())
+                .andExpect(content().string(json));
+    }
+
+    @Test
+    @DisplayName("Should find Registration by code.")
+    public void findByCodeErrorRegistrationNotFound() throws Exception {
+
+        String code = "123";
+
+        BDDMockito.given(registrationService.findByCode(code)).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_03));
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                .get(REGISTRATION_API.concat("/findByCode/").concat(code.toString()))
                 .accept(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(requestBuilder)
@@ -156,14 +287,31 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    @DisplayName("Should delete the registration")
-    public void deleteRegistration() throws Exception {
+    @DisplayName("Should not find Registration by code empty.")
+    public void findByCodeErrorRegistrationCodeIsEmpty() throws Exception {
 
-        BDDMockito.given(registrationService.findByCode(anyString()))
-                .willReturn(Optional.of(Registration.builder().id(11).build()));
+        String code = "";
+
+        BDDMockito.given(registrationService.findByCode(Mockito.anyString())).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_04));
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .delete(REGISTRATION_API.concat("/" + 1))
+                .get(REGISTRATION_API.concat("/findByCode/").concat(code))
+                .accept(MediaType.APPLICATION_JSON);
+
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should delete the registration with Success")
+    public void deleteRegistrationWithSuccess() throws Exception {
+
+        String code = "123";
+        BDDMockito.willDoNothing().given(registrationService).delete(code);
+
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                .delete(REGISTRATION_API.concat("/deleteByCode/")
+                .concat(code.toString()))
                 .accept(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(requestBuilder)
@@ -171,102 +319,106 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    @DisplayName("Should return resource not found when no registration is found to delete")
-    public void deleteNonExistentRegistrationTest() throws Exception {
+    @DisplayName("Should not delete the registration not found")
+    public void deleteErrorRegistrationNotFound() throws Exception {
 
-        BDDMockito.given(registrationService
-                .findByCode(anyString())).willReturn(Optional.empty());
-
+        String code = "123";
+        BDDMockito.willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_03)).given(registrationService).delete(code);
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .delete(REGISTRATION_API.concat("/" + 1))
+                .delete(REGISTRATION_API.concat("/deleteByCode/")
+                        .concat(code.toString()))
                 .accept(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(requestBuilder)
                 .andExpect(status().isNotFound());
     }
 
-//    @Test
-//    @DisplayName("Should update when registration info")
-//    public void updateRegistrationTest() throws Exception {
-//
-//        Integer id = 11;
-//        String json = new ObjectMapper().writeValueAsString(createNewRegistration());
-//
-//        Registration updatingRegistration =
-//                Registration.builder()
-//                        .id(id)
-//                        .name("Julie Neri")
-//                        .dateOfRegistration("10/10/2021")
-//                        .code("323")
-//                        .build();
-//
-//        BDDMockito.given(registrationService.findByCode(anyString()))
-//                .willReturn(Optional.of(updatingRegistration));
-//
-//        Registration updatedRegistration =
-//                Registration.builder()
-//                        .id(id)
-//                        .name("Kamila Santos")
-//                        .dateOfRegistration("10/10/2021")
-//                        .code("323")
-//                        .build();
-//
-//        BDDMockito.given(registrationService
-//                        .update(updatingRegistration))
-//                .willReturn(updatedRegistration);
-//
-//        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-//                .put(REGISTRATION_API.concat("/" + 1))
-//                .contentType(json)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .contentType(MediaType.APPLICATION_JSON);
-//
-//        mockMvc.perform(requestBuilder)
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("id").value(id))
-//                .andExpect(jsonPath("name").value(createNewRegistration().getName()))
-//                .andExpect(jsonPath("dateOfRegistration").value(createNewRegistration().getDateOfRegistration()))
-//                .andExpect(jsonPath("registration").value("323"));
-//    }
-
     @Test
-    @DisplayName("Should return 404 when try to update an registration no existent")
-    public void updateNonExistentRegistrationTest() throws Exception {
+    @DisplayName("Should not delete the registration not found")
+    public void deleteErrorRegistrationWithRegistrationCodeEmpty() throws Exception {
 
-        String json = new ObjectMapper().writeValueAsString(createNewRegistration());
-        BDDMockito.given(registrationService.findByCode(anyString()))
-                .willReturn(Optional.empty());
+        String code = "";
+        BDDMockito.willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_04)).given(registrationService).delete(code);
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .put(REGISTRATION_API.concat("/" + 1))
-                .contentType(json)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON);
+                .delete(REGISTRATION_API.concat("/deleteByCode/")
+                        .concat(code.toString()))
+                .accept(MediaType.APPLICATION_JSON);
 
         mockMvc.perform(requestBuilder)
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    @DisplayName("Should filter registration")
-    public void findRegistrationTest() throws Exception {
+    @DisplayName("Should add Meetup Im Registration with Success")
+    public void addMeetupInRegistrationSuccess() throws Exception {
+
+        String event = "Java";
+        Optional<Meetup> meetupOptional = createMeetupOptional(event);
+        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("123");
+        Registration registration = createNewRegistrationWithMeetup(registrationDTO.getCode(), meetupOptional.get());
+
+        BDDMockito.given(meetupService.findByEvent(Mockito.any(MeetupFilterDTO.class))).willReturn(meetupOptional);
+        BDDMockito.given(registrationService.addMeetupInRegistration(Mockito.any(RegistrationDTO.class), Mockito.any(Optional.class))).willReturn(registration);
+
+        String jsonRequest = new ObjectMapper().writeValueAsString(registrationDTO);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put(REGISTRATION_API.concat("/addMeetupInRegistration"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        String json = new ObjectMapper().writeValueAsString(registration);
+
+        mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(content().string(json));
+    }
+
+    @Test
+    @DisplayName("Should not add Meetup Im Registration when Meetup already exist In Registration")
+    public void notAddMeetupInRegistrationWhenMeetupAlreadyExistINRegistration() throws Exception {
+
+        String event = "Java";
+        Optional<Meetup> meetupOptional = createMeetupOptional(event);
+        RegistrationDTO registrationDTO = createNewRegistrationDTOWithoutMeetup("123");
+        Registration registration = createNewRegistrationWithMeetup(registrationDTO.getCode(), meetupOptional.get());
+
+        BDDMockito.given(meetupService.findByEvent(Mockito.any(MeetupFilterDTO.class))).willReturn(meetupOptional);
+        BDDMockito.given(registrationService.addMeetupInRegistration(Mockito.any(RegistrationDTO.class), Mockito.any(Optional.class))).willReturn(registration);
+
+        String jsonRequest = new ObjectMapper().writeValueAsString(registrationDTO);
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.put(REGISTRATION_API.concat("/addMeetupInRegistration"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        String json = new ObjectMapper().writeValueAsString(registration);
+
+        mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(content().string(json));
+    }
+
+    @Test
+    @DisplayName("Should all registrations with success")
+    public void findAllSuccess() throws Exception {
 
         Integer id = 11;
 
         Registration registration = Registration.builder()
                 .id(id)
-                .name(createNewRegistration().getName())
-                .dateOfRegistration(createNewRegistration().getDateOfRegistration())
-                .code(createNewRegistration().getCode()).build();
+                .name("Kamila")
+                .dateOfRegistration("10/10/2022")
+                .code("001").build();
 
         BDDMockito.given(registrationService.findAll(Mockito.any(Pageable.class)) )
-                .willReturn(new PageImpl<>(Arrays.asList(registration), PageRequest.of(0,100), 1));
+                .willReturn(new PageImpl<Registration>(Arrays.asList(registration), PageRequest.of(0,100), 1));
 
-        // ? = Estou passando um parametro/ % = o dado que vai estar vindo/ s = qualquer coisa que vier depois disso / & = separar os parametros
-        String queryString = String.format("?name=%s&dateOfRegistration=%s&page=0&size=100",
-                registration.getCode(), registration.getDateOfRegistration());
-
+        String queryString = String.format("/findAll?name=%s&dateOfRegistration=%s&page=0&size=100",
+                "001", registration.getDateOfRegistration());
 
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
                 .get(REGISTRATION_API.concat(queryString))
@@ -279,7 +431,65 @@ public class RegistrationControllerTest {
                 .andExpect(jsonPath("totalElements"). value(1))
                 .andExpect(jsonPath("pageable.pageSize"). value(100))
                 .andExpect(jsonPath("pageable.pageNumber"). value(0));
+    }
 
+    @Test
+    @DisplayName("Should find grouped filter event.")
+    public void findGroupedFilterByEvent() throws Exception {
+
+        String eventJava = "Java";
+        Meetup meetupJava = Meetup.builder().id(1).event(eventJava).date("10/10/2022").registered(true).build();
+        Registration registrationJava = Registration.builder().id(101)
+                .name("Kamila Santos").dateOfRegistration("10/10/2021").code("001").meetup(meetupJava).build();
+
+        Map<Meetup, List<Registration>> mapGroupedFilterJava = new HashMap<>();
+        mapGroupedFilterJava.put(meetupJava, Arrays.asList(registrationJava));
+
+        BDDMockito.given(registrationService.findGrouped(eventJava)).willReturn(mapGroupedFilterJava);
+
+        RegistrationDTO dto = RegistrationDTO.builder().event(eventJava).build();
+
+        String jsonRequest = new ObjectMapper().writeValueAsString(dto);
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get(REGISTRATION_API.concat("/findGrouped"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        String jsonResponse = new ObjectMapper().writeValueAsString(mapGroupedFilterJava);
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isOk())
+                .andExpect(content().string(jsonResponse));
+    }
+
+    @Test
+    @DisplayName("Should find grouped all registrations.")
+    public void findGroupedAllRegistrations() throws Exception {
+
+        String eventJava = "Java";
+        Meetup meetupJava = Meetup.builder().id(1).event(eventJava).date("10/10/2022").registered(true).build();
+        Registration registrationJava = Registration.builder().id(101)
+                .name("Kamila Santos").dateOfRegistration("10/10/2021").code("001").meetup(meetupJava).build();
+
+        Meetup meetupPython = Meetup.builder().id(2).event(eventJava).date("10/11/2022").registered(true).build();
+        Registration registrationPython = Registration.builder().id(102)
+                .name("Alan dos Santos").dateOfRegistration("10/11/2021").code("002").meetup(meetupPython).build();
+
+        Map<Meetup, List<Registration>> mapGroupedAll = new HashMap<>();
+        mapGroupedAll.put(meetupJava, Arrays.asList(registrationJava));
+        mapGroupedAll.put(meetupPython, Arrays.asList(registrationPython));
+
+        BDDMockito.given(registrationService.findGrouped(null)).willReturn(mapGroupedAll);
+
+        String jsonRequest = new ObjectMapper().writeValueAsString(new RegistrationDTO());
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get(REGISTRATION_API.concat("/findGrouped"))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        String jsonResponse = new ObjectMapper().writeValueAsString(mapGroupedAll);
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isOk())
+                .andExpect(content().string(jsonResponse));
     }
 
     private RegistrationDTO createNewRegistration() {
@@ -287,4 +497,65 @@ public class RegistrationControllerTest {
                 .name("Kamila Santos").dateOfRegistration("10/10/2021").code("001").build();
     }
 
+    public static RegistrationDTO createNewRegistrationDTOWithMeetup(String code, String event) {
+        return RegistrationDTO.builder()
+                .id(101)
+                .name("kamila Santos")
+                .dateOfRegistration("10/10/2021")
+                .code(code)
+                .event(event).build();
+    }
+
+    public static RegistrationDTO createNewRegistrationDTOWithoutMeetup(String code) {
+        return RegistrationDTO.builder()
+                .id(1)
+                .name("kamila Santos")
+                .dateOfRegistration("10/10/2021")
+                .code(code)
+                .build();
+    }
+
+    public static Meetup create(String event) {
+        return Meetup.builder()
+                .event(event)
+                .date("23/04/2021")
+                .registered(true).build();
+    }
+
+    public static Optional<Meetup> createMeetupOptional(String event){
+
+        Optional<Meetup> meetupOptinal = Optional.of(Meetup.builder().id(1).event(event).date("23/04/2021").registered(true).build());
+
+        return meetupOptinal;
+    }
+
+    public static Meetup createMeetup(String event) {
+        return Meetup.builder()
+                .id(1)
+                .event(event)
+                .date("23/04/2021")
+                .registered(true).build();
+    }
+
+    public static Registration createNewRegistrationWithMeetup(String code, Meetup meetup) {
+        return Registration.builder()
+                .id(1)
+                .name("kamila Santos")
+                .dateOfRegistration("10/10/2021")
+                .code(code)
+                .meetup(meetup).build();
+    }
+
+    public static Registration createNewRegistrationWithMeetup(RegistrationDTO registrationDTO, Meetup meetup) {
+        return Registration.builder()
+                .id(1)
+                .name(registrationDTO.getName())
+                .dateOfRegistration(registrationDTO.getDateOfRegistration())
+                .code(registrationDTO.getCode())
+                .meetup(meetup).build();
+    }
+
+    public static Registration createNewRegistrationWithoutMeetup(String code) {
+        return createNewRegistrationWithMeetup(code, null);
+    }
 }

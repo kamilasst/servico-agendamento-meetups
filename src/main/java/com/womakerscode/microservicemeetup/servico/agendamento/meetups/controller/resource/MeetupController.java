@@ -62,6 +62,25 @@ public class MeetupController {
         }
     }
 
+    @GetMapping("/findAll")
+    public Page<Meetup> findAll(Pageable pageRequest) {
+
+        try {
+
+            Page<Meetup> meetupDb = meetupService.findAll(pageRequest);
+
+            List<Meetup> meetupList = meetupDb.getContent();
+
+            return new PageImpl<>(meetupList, pageRequest, meetupDb.getTotalElements());
+
+        } catch (BusinessException e) {
+            return (Page<Meetup>) ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
+
+        } catch (Exception e) {
+            return (Page<Meetup>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @PutMapping("/update")
     private ResponseEntity<Meetup> update(@RequestBody MeetupDTO meetupDTO) {
 
@@ -90,25 +109,6 @@ public class MeetupController {
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/findAll")
-    public Page<Meetup> findAll(Pageable pageRequest) {
-
-        try {
-
-            Page<Meetup> meetupDb = meetupService.findAll(pageRequest);
-
-            List<Meetup> meetupList = meetupDb.getContent();
-
-            return new PageImpl<>(meetupList, pageRequest, meetupDb.getTotalElements());
-
-        } catch (BusinessException e) {
-            return (Page<Meetup>) ApplicationControllerAdvice.handleResponseStatusException(new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()));
-
-        } catch (Exception e) {
-            return (Page<Meetup>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

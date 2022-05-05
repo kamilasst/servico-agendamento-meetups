@@ -12,8 +12,8 @@ public class BusinessExceptionMessageConstants {
     public static final String MESSAGE_ERROR_REGISTRATION_02 = "Registration already created";
     public static final String MESSAGE_ERROR_REGISTRATION_03 = "Registration code not found";
     public static final String MESSAGE_ERROR_REGISTRATION_04 = "Invalid code";
-    public static final String MESSAGE_ERROR_REGISTRATION_05 = "Registration code Registration cannot be null";
-
+    public static final String MESSAGE_ERROR_REGISTRATION_05 = "Registration code or Registration cannot be null";
+    public static final String MESSAGE_ERROR_REGISTRATION_06 = "Registration already has meetup";
 
     private BusinessExceptionMessageConstants() {}
 }

@@ -93,6 +93,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         Optional<Registration> registrationOptional = findByCode(registrationDTO.getCode());
 
         validateRegistration(registrationOptional);
+        validateMeetupExistInRegistration(registrationOptional);
 
         Registration registration = registrationOptional.get();
         registration.setMeetup(meetupOptional.get());
@@ -142,6 +143,14 @@ public class RegistrationServiceImpl implements RegistrationService {
         if (registrationBd.isEmpty()) {
             throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_03);
         }
+    }
+
+    private void validateMeetupExistInRegistration(Optional<Registration> registration){
+
+        if (registration.get().getMeetup() != null){
+            throw new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_06);
+        }
+
     }
 
     private void validateMeetUp(Optional<Meetup> meetupOptional) {

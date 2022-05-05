@@ -374,4 +374,25 @@ public class RegistrationServiceTest {
         Assertions.assertEquals(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_03, exception.getMessage());
         Mockito.verify(registrationRepository, Mockito.never()).delete(Mockito.any(Registration.class));
     }
+
+    @Test
+    @DisplayName("Should not add Meetup when RegistrationDTO code not found")
+    public void notAddMeetupWhenExistMeetupInRegistration() {
+
+        //Assange
+        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, meetupOptional.get().getEvent());
+        Optional<Registration> registration = RegistrationBuilder.createRegistrationOptional(CODE_123,meetupOptional.get());
+
+        Mockito.when(registrationRepository.findByCode(registrationDTO.getCode())).thenReturn(registration);
+
+        //Act
+        BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
+            registrationService.addMeetupInRegistration(registrationDTO, meetupOptional);
+        });
+
+        //Assert
+        Assertions.assertEquals(BusinessExceptionMessageConstants.MESSAGE_ERROR_REGISTRATION_06, exception.getMessage());
+        Mockito.verify(registrationRepository, Mockito.never()).delete(Mockito.any(Registration.class));
+    }
 }

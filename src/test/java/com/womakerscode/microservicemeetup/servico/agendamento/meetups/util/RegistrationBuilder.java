@@ -51,7 +51,7 @@ public class RegistrationBuilder {
 
     public static Optional<Registration> createRegistrationOptional(String code, Meetup meetup){
 
-        Optional<Registration> registrationOptional = Optional.of(Registration.builder().id(1).name("Kamila Santos").dateOfRegistration("28/04/22").code(code).meetup(meetup).build());
+        Optional<Registration> registrationOptional = Optional.of(Registration.builder().id(1).name("Kamila Santos").dateOfRegistration("10/10/21").code(code).meetup(meetup).build());
 
         return registrationOptional;
     }
