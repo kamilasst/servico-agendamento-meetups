@@ -1,6 +1,7 @@
 package com.womakerscode.microservicemeetup.servico.agendamento.meetups.service;
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationFilterDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessExceptionMessageConstants;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
@@ -52,16 +53,16 @@ public class RegistrationServiceTest {
     public void saveRegistrationWithMeetup(){
 
         //Assange
-        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
-        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, meetupOptional.get().getEvent());
-        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(registrationDTO, meetupOptional.get());
+        Optional<Meetup> meetupOptional = MeetupBuilder.buildOptional("Java");
+        RegistrationFilterDTO registrationFilterDTO = RegistrationBuilder.buildFilterDTO(CODE_123, meetupOptional.get().getEvent());
+        Registration registration = RegistrationBuilder.build(registrationFilterDTO, meetupOptional.get());
         registration.setId(1);
 
-        Mockito.when(registrationRepository.existsByCode(registrationDTO.getCode())).thenReturn(false);
+        Mockito.when(registrationRepository.existsByCode(registrationFilterDTO.getCode())).thenReturn(false);
         Mockito.when(registrationRepository.save(Mockito.any(Registration.class))).thenReturn(registration);
 
         //Act
-        Integer idRegistrationSaved = registrationService.save(registrationDTO, meetupOptional);
+        Integer idRegistrationSaved = registrationService.save(registrationFilterDTO, meetupOptional);
 
         //Assert
         Assertions.assertEquals(1, idRegistrationSaved);
@@ -72,15 +73,15 @@ public class RegistrationServiceTest {
     public void saveRegistrationWithoutMeetup(){
 
         //Assange
-        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, null);
-        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(registrationDTO.getCode());
+        RegistrationFilterDTO registrationFilterDTO = RegistrationBuilder.buildFilterDTO(CODE_123, null);
+        Registration registration = RegistrationBuilder.build(registrationFilterDTO.getCode());
         registration.setId(1);
 
-        Mockito.when(registrationRepository.existsByCode(registrationDTO.getCode())).thenReturn(false);
+        Mockito.when(registrationRepository.existsByCode(registrationFilterDTO.getCode())).thenReturn(false);
         Mockito.when(registrationRepository.save(Mockito.any(Registration.class))).thenReturn(registration);
 
         //Act
-        Integer idRegistrationSaved = registrationService.save(registrationDTO, Optional.empty());
+        Integer idRegistrationSaved = registrationService.save(registrationFilterDTO, Optional.empty());
 
         //Assert
         Assertions.assertEquals(1, idRegistrationSaved);
@@ -91,15 +92,15 @@ public class RegistrationServiceTest {
     public void notSaveAsRegistrationDuplicated(){
 
         //Assange
-        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
-        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, meetupOptional.get().getEvent());
-        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(registrationDTO, meetupOptional.get());
+        Optional<Meetup> meetupOptional = MeetupBuilder.buildOptional("Java");
+        RegistrationFilterDTO registrationFilterDTO = RegistrationBuilder.buildFilterDTO(CODE_123, meetupOptional.get().getEvent());
+        Registration registration = RegistrationBuilder.build(registrationFilterDTO, meetupOptional.get());
 
-        Mockito.when(registrationRepository.existsByCode(registrationDTO.getCode())).thenReturn(true);
+        Mockito.when(registrationRepository.existsByCode(registrationFilterDTO.getCode())).thenReturn(true);
 
         //Act
         BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
-            registrationService.save(registrationDTO, meetupOptional);});
+            registrationService.save(registrationFilterDTO, meetupOptional);});
 
         //Assert
         Assertions.assertEquals("Registration already created", exception.getMessage());
@@ -159,9 +160,9 @@ public class RegistrationServiceTest {
     public void updateRegistrationWithSuccess(){
 
         //Arrange
-        Meetup meetup = MeetupBuilder.createJava();
-        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, "Java");
-        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_123, meetup);
+        Meetup meetup = MeetupBuilder.buildJava();
+        RegistrationDTO registrationDTO = RegistrationBuilder.buildDTO(CODE_123, "Java");
+        Registration registration = RegistrationBuilder.build(CODE_123, meetup);
         registration.setName("Maria");
         registration.setDateOfRegistration("12/04/22");
 
@@ -197,7 +198,7 @@ public class RegistrationServiceTest {
     public void UpdateNotEmptyRegistration(){
 
         //Arrange
-        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, "Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.buildDTO(CODE_123, "Java");
 
         Mockito.when(registrationRepository.findByCode(Mockito.anyString())).thenReturn(Optional.empty());
 
@@ -217,7 +218,7 @@ public class RegistrationServiceTest {
 
         //Arrange
         String code = CODE_123;
-        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(code);
+        Registration registration = RegistrationBuilder.build(code);
 
         Mockito.when(registrationRepository.findByCode(code)).thenReturn(Optional.of(registration));
 
@@ -234,9 +235,9 @@ public class RegistrationServiceTest {
     public void findByCodeRegistrationWithMeetup(){
 
         //Arrange
-        Meetup meetup = MeetupBuilder.createJava();
+        Meetup meetup = MeetupBuilder.buildJava();
         String code = CODE_123;
-        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(code, meetup);
+        Registration registration = RegistrationBuilder.build(code, meetup);
 
         Mockito.when(registrationRepository.findByCode(code)).thenReturn(Optional.of(registration));
 
@@ -299,8 +300,8 @@ public class RegistrationServiceTest {
     public void findByAllRegistration(){
 
         //Assange
-        Meetup meetup = MeetupBuilder.createJava();
-        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_123, meetup);
+        Meetup meetup = MeetupBuilder.buildJava();
+        Registration registration = RegistrationBuilder.build(CODE_123, meetup);
         var listRegistration = Arrays.asList(registration);
 
         Page<Registration> page = new PageImpl(listRegistration, PageRequest.of(0,10), 0);
@@ -323,12 +324,12 @@ public class RegistrationServiceTest {
     public void addMeetupInRegistration() {
 
         //Assange
-        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
-        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup(CODE_123);
+        Optional<Meetup> meetupOptional = MeetupBuilder.buildOptional("Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.buildDTO(CODE_123);
         registrationDTO.setEvent(meetupOptional.get().getEvent());
 
-        Registration registrationWithoutMeetup = RegistrationBuilder.createNewRegistrationWithoutMeetup(registrationDTO.getCode());
-        Registration registrationWithMeetup = RegistrationBuilder.createNewRegistrationWithMeetup(registrationDTO, meetupOptional.get());
+        Registration registrationWithoutMeetup = RegistrationBuilder.build(registrationDTO.getCode());
+        Registration registrationWithMeetup = RegistrationBuilder.build(registrationDTO, meetupOptional.get());
 
         Mockito.when(registrationRepository.findByCode(Mockito.anyString())).thenReturn(Optional.of(registrationWithoutMeetup));
         Mockito.when(registrationService.update(registrationDTO)).thenReturn(registrationWithMeetup);
@@ -345,7 +346,7 @@ public class RegistrationServiceTest {
     public void AddNotMeetupToRegistrationWhenEmptyMeetup() {
 
         //Assange
-        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup(CODE_123);
+        RegistrationDTO registrationDTO = RegistrationBuilder.buildDTO(CODE_123);
 
         //Act
         BusinessException exception = Assertions.assertThrows(BusinessException.class, () -> {
@@ -362,8 +363,8 @@ public class RegistrationServiceTest {
     public void AddNotMeetupWhenRegistrationDTOCodeNotFound() {
 
         //Assange
-        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
-        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithoutMeetup(CODE_123);
+        Optional<Meetup> meetupOptional = MeetupBuilder.buildOptional("Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.buildDTO(CODE_123);
 
         Mockito.when(registrationRepository.findByCode(registrationDTO.getCode())).thenReturn(Optional.empty());
 
@@ -382,9 +383,9 @@ public class RegistrationServiceTest {
     public void notAddMeetupWhenExistMeetupInRegistration() {
 
         //Assange
-        Optional<Meetup> meetupOptional = MeetupBuilder.createMeetupOptional("Java");
-        RegistrationDTO registrationDTO = RegistrationBuilder.createNewRegistrationDTOWithMeetup(CODE_123, meetupOptional.get().getEvent());
-        Optional<Registration> registration = RegistrationBuilder.createRegistrationOptional(CODE_123,meetupOptional.get());
+        Optional<Meetup> meetupOptional = MeetupBuilder.buildOptional("Java");
+        RegistrationDTO registrationDTO = RegistrationBuilder.buildDTO(CODE_123, meetupOptional.get().getEvent());
+        Optional<Registration> registration = RegistrationBuilder.BuildOptional(CODE_123,meetupOptional.get());
 
         Mockito.when(registrationRepository.findByCode(registrationDTO.getCode())).thenReturn(registration);
 

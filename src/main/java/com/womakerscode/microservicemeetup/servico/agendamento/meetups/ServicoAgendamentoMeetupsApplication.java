@@ -12,9 +12,4 @@ public class ServicoAgendamentoMeetupsApplication {
 		SpringApplication.run(ServicoAgendamentoMeetupsApplication.class, args);
 	}
 
-	@Bean
-	public ModelMapper modelMapper(){
-		return new ModelMapper();
-	}
-
 }

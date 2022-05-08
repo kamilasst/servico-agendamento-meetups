@@ -1,6 +1,7 @@
 package com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.impl;
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationFilterDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessExceptionMessageConstants;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
@@ -26,11 +27,11 @@ public class RegistrationServiceImpl implements RegistrationService {
         this.registrationRepository = repository;
     }
 
-    public Integer save(RegistrationDTO registrationDTO, Optional<Meetup> meetupOptional) {
+    public Integer save(RegistrationFilterDTO registrationFilterDTO, Optional<Meetup> meetupOptional) {
 
         Meetup meetup = meetupOptional.isPresent() ? meetupOptional.get() : null;
 
-        Registration registration = createRegistration(registrationDTO, meetup);
+        Registration registration = createRegistration(registrationFilterDTO, meetup);
 
         Registration registrationBd = save(registration);
 
@@ -115,7 +116,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     public Map<Meetup, List<Registration>> findGrouped(String event) {
 
         List<Registration> registrations = new ArrayList<>();
-        if (StringUtils.isBlank(event)){
+        if (event == null || event.length() <= 2){
             registrations = registrationRepository.findAll();
         } else {
             registrations = registrationRepository.findByEvent(event);
@@ -174,12 +175,12 @@ public class RegistrationServiceImpl implements RegistrationService {
         }
     }
 
-    private Registration createRegistration(RegistrationDTO registrationDTO, Meetup meetup){
+    private Registration createRegistration(RegistrationFilterDTO registrationFilterDTO, Meetup meetup){
 
         return Registration.builder()
-                .name(registrationDTO.getName())
-                .dateOfRegistration(registrationDTO.getDateOfRegistration())
-                .code(registrationDTO.getCode())
+                .name(registrationFilterDTO.getName())
+                .dateOfRegistration(registrationFilterDTO.getDateOfRegistration())
+                .code(registrationFilterDTO.getCode())
                 .meetup(meetup)
                 .build();
     }

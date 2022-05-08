@@ -1,6 +1,7 @@
 package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller;
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupFilterDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.resource.MeetupController;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessExceptionMessageConstants;
@@ -51,7 +52,7 @@ public class MeetupControllerTest {
     public void createMeetup() throws Exception {
 
         // arrange
-        MeetupDTO dto = MeetupDTO.builder().event("Java").build();
+        MeetupFilterDTO dto = MeetupFilterDTO.builder().event("Java").build();
         Meetup meetupSaved = Meetup.builder().id(101).event("Java").date("05/05/2022").registered(true).build();
         String json = new ObjectMapper().writeValueAsString(dto);
 
@@ -70,7 +71,7 @@ public class MeetupControllerTest {
     @DisplayName("Should return error when try to create meetup not found.")
     public void createMeetupErrorMeetupNotFound() throws Exception {
 
-        MeetupDTO dto = MeetupDTO.builder().event("Java").build();
+        MeetupFilterDTO dto = MeetupFilterDTO.builder().event("Java").build();
         String json = new ObjectMapper().writeValueAsString(dto);
 
         BDDMockito.given(meetupService.save(Mockito.any(String.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_MEETUP_01));
@@ -88,7 +89,7 @@ public class MeetupControllerTest {
     @DisplayName("Should return error when try to create meetup event not found.")
     public void createMeetupErrorEventNotFound() throws Exception {
 
-        MeetupDTO dto = MeetupDTO.builder().event("Java").build();
+        MeetupFilterDTO dto = MeetupFilterDTO.builder().event("Java").build();
         String json = new ObjectMapper().writeValueAsString(dto);
 
         BDDMockito.given(meetupService.save(Mockito.any(String.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_MEETUP_02));
@@ -106,7 +107,7 @@ public class MeetupControllerTest {
     @DisplayName("Should return error when try to create meetup date null.")
     public void createMeetupErrorDateCannotNull() throws Exception {
 
-        MeetupDTO dto = MeetupDTO.builder().event("Java").build();
+        MeetupFilterDTO dto = MeetupFilterDTO.builder().event("Java").build();
         String json = new ObjectMapper().writeValueAsString(dto);
 
         BDDMockito.given(meetupService.save(Mockito.any(String.class))).willThrow(new BusinessException(BusinessExceptionMessageConstants.MESSAGE_ERROR_MEETUP_03));

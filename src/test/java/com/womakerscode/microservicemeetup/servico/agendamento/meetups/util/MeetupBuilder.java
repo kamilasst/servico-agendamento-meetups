@@ -6,18 +6,18 @@ import java.util.Optional;
 
 public class MeetupBuilder {
 
-    public static Meetup create(String event) {
+    public static Meetup build(String event) {
         return Meetup.builder()
                 .event(event)
                 .date("23/04/2021")
                 .registered(true).build();
     }
 
-    public static Meetup createJava() {
-        return create("Java");
+    public static Meetup buildJava() {
+        return build("Java");
     }
 
-    public static Optional<Meetup> createMeetupOptional(String event){
+    public static Optional<Meetup> buildOptional(String event){
 
         Optional<Meetup> meetupOptinal = Optional.of(Meetup.builder().id(1).event(event).date("23/04/2021").registered(true).build());
 

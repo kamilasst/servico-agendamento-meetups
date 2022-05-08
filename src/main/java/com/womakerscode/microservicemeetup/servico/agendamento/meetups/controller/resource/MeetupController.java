@@ -2,6 +2,7 @@ package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controll
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.ApplicationControllerAdvice;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupFilterDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.MeetupService;
@@ -26,10 +27,10 @@ public class MeetupController {
     private final MeetupService meetupService;
 
     @PostMapping("/create")
-    private ResponseEntity<Integer> create(@RequestBody MeetupDTO meetupDTO) {
+    private ResponseEntity<Integer> create(@RequestBody MeetupFilterDTO meetupFilterDTO) {
 
         try {
-            Integer meetupId = meetupService.save(meetupDTO.getEvent());
+            Integer meetupId = meetupService.save(meetupFilterDTO.getEvent());
 
             return ResponseEntity.created(URI.create("/meetups/" + meetupId)).build();
 

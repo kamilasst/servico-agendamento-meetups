@@ -32,8 +32,8 @@ public class MeetupRepositoryTest {
     public void findByEvent() {
 
         // arrange
-        Meetup meetupJava = MeetupBuilder.createJava();
-        Meetup meetupPython = MeetupBuilder.create("Python");
+        Meetup meetupJava = MeetupBuilder.buildJava();
+        Meetup meetupPython = MeetupBuilder.build("Python");
         entityManager.persist(meetupJava);
         entityManager.persist(meetupPython);
 
@@ -50,8 +50,8 @@ public class MeetupRepositoryTest {
     public void findByEventNotFound() {
 
         // arrange
-        Meetup meetupJava = MeetupBuilder.createJava();
-        Meetup meetupPython = MeetupBuilder.create("Python");
+        Meetup meetupJava = MeetupBuilder.buildJava();
+        Meetup meetupPython = MeetupBuilder.build("Python");
         entityManager.persist(meetupJava);
         entityManager.persist(meetupPython);
 

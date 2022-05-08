@@ -5,14 +5,24 @@
 
 Consiste num pequeno microservice que irá ter lado de client e server no momento de se cadastrar num meetup.
 
+Nele poderemos:
+ - Criar os meetups;
+ - Realizar o registro de usuários;
+ - E os usuários poderão se inscrever nos meetups.
+
+
 ## 💻 Tecnologias utilizadas
 
-- Java 11
-- Gradle
-- Spring
-- JPA
-- TDD Test Driven Development
-- Azure functions
+ - Java 11,
+ - Gradle,
+ - Spring (Spring Boot, Spring JPA, Injeção de dependência)
+ - TDD Test Driven Development
+ - Testes Unitários com JUnit 5 e Mockito
+ - Banco de dados H2.
+ - Git e GitHub
+ - Swagger UI
+ - Azure functions.
+
 
 ## 👩‍💻 TODO list
 - [x] Implementação da classe se servico
@@ -32,3 +42,9 @@ Consiste num pequeno microservice que irá ter lado de client e server no moment
 
 
 Totalizando 80 testes unitários.
+86% de cobertura de Testes unitários.
+
+##  Diagrama de classe e Arquitetura
+
+src/resources/Apresentação Projeto Final - Bootcamp Backend Java.pdf
+

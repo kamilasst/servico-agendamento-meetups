@@ -1,0 +1,27 @@
+package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.validation.constraints.NotEmpty;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class RegistrationFilterDTO {
+
+    @NotEmpty
+    private String name;
+
+    @NotEmpty
+    private String dateOfRegistration;
+
+    @NotEmpty
+    private String code;
+
+    private String event;
+
+}

@@ -48,7 +48,7 @@ public class MeetupServiceTest {
     public void findByEvent() {
 
         // arrange
-        Meetup meetup = MeetupBuilder.createJava();
+        Meetup meetup = MeetupBuilder.buildJava();
 
         Mockito.when(meetupRepository.findByEvent(Mockito.any(String.class))).thenReturn(Optional.of(meetup));
 
@@ -65,7 +65,7 @@ public class MeetupServiceTest {
     public void findById() {
 
         // arrange
-        Meetup meetup = MeetupBuilder.createJava();
+        Meetup meetup = MeetupBuilder.buildJava();
 
         Mockito.when(meetupRepository.findById(1)).thenReturn(Optional.of(meetup));
 
@@ -82,7 +82,7 @@ public class MeetupServiceTest {
     public void findByAll() {
 
         // arrange
-        Meetup meetup = MeetupBuilder.createJava();
+        Meetup meetup = MeetupBuilder.buildJava();
 
         var listMeetups = Arrays.asList(meetup);
         Page<Meetup> page = new PageImpl<>(listMeetups, PageRequest.of(0,10), 0);
@@ -105,7 +105,7 @@ public class MeetupServiceTest {
     public void deleteSuccess(){
 
         //arrange
-        Meetup meetup = MeetupBuilder.createJava();
+        Meetup meetup = MeetupBuilder.buildJava();
         meetup.setId(1);
 
         //mock
@@ -140,7 +140,7 @@ public class MeetupServiceTest {
     public void deleteExceptionMeetupCannotBeDeletedBecauseMeetupHasRegistration(){
 
         //arrange
-        Meetup meetup = MeetupBuilder.createJava();
+        Meetup meetup = MeetupBuilder.buildJava();
         meetup.setId(1);
 
         //mock
@@ -160,7 +160,7 @@ public class MeetupServiceTest {
     public void SaveSuccess(){
 
         //arrange
-        Meetup meetup = MeetupBuilder.create(null);
+        Meetup meetup = MeetupBuilder.build(null);
         meetup.setId(1);
 
         //mock
@@ -190,10 +190,10 @@ public class MeetupServiceTest {
     public void UpdateSuccess(){
 
         //arrange
-        Meetup meetupJava = MeetupBuilder.create("Java");
+        Meetup meetupJava = MeetupBuilder.build("Java");
         meetupJava.setId(1);
 
-        Meetup meetupUpdated = MeetupBuilder.create("Python");
+        Meetup meetupUpdated = MeetupBuilder.build("Python");
         meetupJava.setId(1);
 
         //mock

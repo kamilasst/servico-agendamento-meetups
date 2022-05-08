@@ -2,6 +2,7 @@ package com.womakerscode.microservicemeetup.servico.agendamento.meetups.controll
 
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.ApplicationControllerAdvice;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.MeetupFilterDTO;
+import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controller.dto.RegistrationFilterDTO;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.exception.BusinessException;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Meetup;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.model.entity.Registration;
@@ -9,7 +10,6 @@ import com.womakerscode.microservicemeetup.servico.agendamento.meetups.controlle
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.MeetupService;
 import com.womakerscode.microservicemeetup.servico.agendamento.meetups.service.RegistrationService;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -33,11 +33,11 @@ public class RegistrationController {
     private final MeetupService meetupService;
 
     @PostMapping("/create")
-    public ResponseEntity<RegistrationDTO> create(@RequestBody @Valid RegistrationDTO registrationDTO) {
+    public ResponseEntity<RegistrationDTO> create(@RequestBody @Valid RegistrationFilterDTO registrationFilterDTO) {
 
         try {
-            Optional<Meetup> meetupOptional = meetupService.findByEvent(new MeetupFilterDTO(registrationDTO.getEvent()));
-            Integer registrationId = registrationService.save(registrationDTO, meetupOptional);
+            Optional<Meetup> meetupOptional = meetupService.findByEvent(new MeetupFilterDTO(registrationFilterDTO.getEvent()));
+            Integer registrationId = registrationService.save(registrationFilterDTO, meetupOptional);
 
             if (registrationId != null) {
                 return ResponseEntity.created(URI.create("/registration/" + registrationId)).build();
@@ -95,11 +95,11 @@ public class RegistrationController {
         }
     }
 
-    @GetMapping("/findGrouped")
-    public ResponseEntity<Map<Meetup, List<Registration>>> findGrouped(@RequestBody RegistrationDTO registrationDTO) {
+    @GetMapping("/findGrouped/{event}")
+    public ResponseEntity<Map<Meetup, List<Registration>>> findGrouped(@PathVariable String event) {
 
         try {
-            Map<Meetup, List<Registration>> registrationGrouped = registrationService.findGrouped(registrationDTO.getEvent());
+            Map<Meetup, List<Registration>> registrationGrouped = registrationService.findGrouped(event);
 
             return ResponseEntity.ok(registrationGrouped);
 

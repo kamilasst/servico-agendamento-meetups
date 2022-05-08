@@ -38,7 +38,7 @@ public class RegistrationRepositoryTest {
     public void existsByCodeReturnTrueWhenRegistrationExists() {
 
         // arrange
-        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_123);
+        Registration registration = RegistrationBuilder.build(CODE_123);
         entityManager.persist(registration);
 
         // act
@@ -64,7 +64,7 @@ public class RegistrationRepositoryTest {
     public void existsByCodeReturnFalseWhenDoesntExistsAnCodeWithARegistrationAlreadyCreated() {
 
         // arrange
-        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_123);
+        Registration registration = RegistrationBuilder.build(CODE_123);
         entityManager.persist(registration);
 
         String codeNoExist = "245";
@@ -103,7 +103,7 @@ public class RegistrationRepositoryTest {
     public void findByCodeWithoutMeetup() {
 
         // arrange
-        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_123);
+        Registration registration = RegistrationBuilder.build(CODE_123);
         entityManager.persist(registration);
 
         // act
@@ -120,8 +120,8 @@ public class RegistrationRepositoryTest {
     public void findByCodeWithTwoRegistrationsAlreadyCreated() {
 
         // arrange
-        Registration registrationCode123 = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_123);
-        Registration registrationCode789 = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_789);
+        Registration registrationCode123 = RegistrationBuilder.build(CODE_123);
+        Registration registrationCode789 = RegistrationBuilder.build(CODE_789);
         entityManager.persist(registrationCode123);
         entityManager.persist(registrationCode789);
 
@@ -139,7 +139,7 @@ public class RegistrationRepositoryTest {
     public void findByCodeReturnEmptyWhenFindAnRegistrationByCodeEmpty() {
 
         // arrange
-        Registration registrationCode123 = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_123);
+        Registration registrationCode123 = RegistrationBuilder.build(CODE_123);
         entityManager.persist(registrationCode123);
 
         // act
@@ -155,7 +155,7 @@ public class RegistrationRepositoryTest {
     public void findByCodeReturnEmptyWhenFindAnRegistrationByCodeNull() {
 
         // arrange
-        Registration registrationCode123 = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_123);
+        Registration registrationCode123 = RegistrationBuilder.build(CODE_123);
         entityManager.persist(registrationCode123);
 
         // act
@@ -183,9 +183,9 @@ public class RegistrationRepositoryTest {
     public void findByCodeWithMeetup() {
 
         // arrange
-        Meetup meetup = MeetupBuilder.create("Java");
+        Meetup meetup = MeetupBuilder.build("Java");
         entityManager.persist(meetup);
-        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_123, meetup);
+        Registration registration = RegistrationBuilder.build(CODE_123, meetup);
         entityManager.persist(registration);
 
         // act
@@ -203,10 +203,10 @@ public class RegistrationRepositoryTest {
     public void findByCodeWithTwoRegistrationsWithMeetupAlreadyCreated() {
 
         // arrange
-        Meetup meetupJava = MeetupBuilder.createJava();
+        Meetup meetupJava = MeetupBuilder.buildJava();
         entityManager.persist(meetupJava);
-        Registration registrationCode123 = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_123, meetupJava);
-        Registration registrationCode789 = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_789, meetupJava);
+        Registration registrationCode123 = RegistrationBuilder.build(CODE_123, meetupJava);
+        Registration registrationCode789 = RegistrationBuilder.build(CODE_789, meetupJava);
         entityManager.persist(registrationCode123);
         entityManager.persist(registrationCode789);
 
@@ -225,7 +225,7 @@ public class RegistrationRepositoryTest {
     public void saveRegistrationWithoutMeetup() {
 
         //arrange
-        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_123);
+        Registration registration = RegistrationBuilder.build(CODE_123);
 
         //act
         Registration savedRegistration = registrationRepository.save(registration);
@@ -241,9 +241,9 @@ public class RegistrationRepositoryTest {
     public void saveRegistrationWithMeetup() {
 
         //arrange
-        Meetup meetup = MeetupBuilder.create("Java");
+        Meetup meetup = MeetupBuilder.build("Java");
         entityManager.persist(meetup);
-        Registration registration = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_123, meetup);
+        Registration registration = RegistrationBuilder.build(CODE_123, meetup);
         entityManager.persist(registration);
 
         Registration savedRegistration = registrationRepository.save(registration);
@@ -258,7 +258,7 @@ public class RegistrationRepositoryTest {
     public void deleteRegistration() {
 
         //arrange
-        Registration registration = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_123);
+        Registration registration = RegistrationBuilder.build(CODE_123);
         entityManager.persist(registration);
 
         Registration foundRegistration = entityManager
@@ -278,19 +278,19 @@ public class RegistrationRepositoryTest {
     public void getCountRegistrationAssociatedMeetup(){
 
         //Arrange
-        Meetup meetupJava = MeetupBuilder.createJava();
+        Meetup meetupJava = MeetupBuilder.buildJava();
         entityManager.persist(meetupJava);
 
-        Meetup meetupPyton = MeetupBuilder.create("Pyton");
+        Meetup meetupPyton = MeetupBuilder.build("Pyton");
         entityManager.persist(meetupPyton);
 
-        Registration registrationPyton = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_789, meetupPyton);
+        Registration registrationPyton = RegistrationBuilder.build(CODE_789, meetupPyton);
         entityManager.persist(registrationPyton);
 
-        Registration registrationJava = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_369, meetupJava);
+        Registration registrationJava = RegistrationBuilder.build(CODE_369, meetupJava);
         entityManager.persist(registrationJava);
 
-        Registration registrationWithoutMeetup = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_123);
+        Registration registrationWithoutMeetup = RegistrationBuilder.build(CODE_123);
         entityManager.persist(registrationWithoutMeetup);
 
         //act
@@ -305,19 +305,19 @@ public class RegistrationRepositoryTest {
     public void getCountRegistrationAssociatedMeetupZeroAssociatedWithTheMeetup(){
 
         //Arrange
-        Meetup meetupJava = MeetupBuilder.createJava();
+        Meetup meetupJava = MeetupBuilder.buildJava();
         entityManager.persist(meetupJava);
 
-        Meetup meetupPyton = MeetupBuilder.create("Pyton");
+        Meetup meetupPyton = MeetupBuilder.build("Pyton");
         entityManager.persist(meetupPyton);
 
-        Registration registrationPyton = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_789, meetupPyton);
+        Registration registrationPyton = RegistrationBuilder.build(CODE_789, meetupPyton);
         entityManager.persist(registrationPyton);
 
-        Registration registrationPyton2 = RegistrationBuilder.createNewRegistrationWithMeetup(CODE_369, meetupPyton);
+        Registration registrationPyton2 = RegistrationBuilder.build(CODE_369, meetupPyton);
         entityManager.persist(registrationPyton2);
 
-        Registration registrationWithoutMeetup = RegistrationBuilder.createNewRegistrationWithoutMeetup(CODE_123);
+        Registration registrationWithoutMeetup = RegistrationBuilder.build(CODE_123);
         entityManager.persist(registrationWithoutMeetup);
 
         //act
