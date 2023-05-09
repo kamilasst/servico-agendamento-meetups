@@ -48,4 +48,16 @@ Totalizando 80 testes unitários.
 
 src/resources/Apresentação Projeto Final - Bootcamp Backend Java.pdf
 
+## Imagens
+Documentação da API no swagger:
+
+![Meetup1](https://github.com/kamilasst/servico-agendamento-meetups/assets/66340842/9cef8583-963d-46bc-82dc-7a0472a21d09)
+
+![Meetup2](https://github.com/kamilasst/Mudi-alura/assets/66340842/74e8f02c-d344-47b0-8c06-887bb131508b)
+
+Diagrama de classe (relacionamento):
+
+![Diagrama de classe](https://github.com/kamilasst/Mudi-alura/assets/66340842/b693f27a-7c1d-46ba-a665-a56cc6d14852)
+
+
 
