@@ -48,6 +48,4 @@ Totalizando 80 testes unitários.
 
 src/resources/Apresentação Projeto Final - Bootcamp Backend Java.pdf
 
-## Imagens
-!("C:\Projetos\imagens1_meetup\Meetup1.png")
 
